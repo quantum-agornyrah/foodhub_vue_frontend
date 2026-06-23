@@ -1,0 +1,10 @@
+/**
+ * src/styles/settings.scss
+ *
+ * Configures SASS variables and Vuetify overwrites
+ */
+
+// Override the default font family for all typography
+@use 'vuetify/settings' with (
+  $body-font-family: ('Outfit', sans-serif)
+);

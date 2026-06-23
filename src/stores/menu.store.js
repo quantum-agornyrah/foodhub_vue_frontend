@@ -1,0 +1,174 @@
+import { defineStore } from 'pinia'
+import { createMenuApi, deleteMenuApi, getAllMenuItemsApi, getWeekDeadlineApi, setWeekDeadlineApi, updateMenuApi } from '../api/menu.api.js'
+
+export const useMenuStore = defineStore('menu', {
+  state: () => ({
+    // Read from local storage
+    allMenuItems: [],
+    weekDeadlines: JSON.parse(localStorage.getItem('foodhub:weekDeadlines') || '{}'),
+    isLoading: false,
+    error: null,
+  }),
+
+  getters: {
+    // Get deadline for a given week
+    deadlineByWeek: state => weekString =>
+      state.weekDeadlines[weekString] || null,
+
+    menuByWeek: state => weekString =>
+      state.allMenuItems.filter(item => item.weekString === weekString),
+
+    menuByDate: state => date =>
+      state.allMenuItems.filter(item => item.date === date),
+  },
+
+  actions: {
+    // function to get all menu items
+    async getAllMenuItems () {
+      this.isLoading = true
+      this.error = null
+      try {
+        const response = await getAllMenuItemsApi()
+        if (response.success) {
+          this.allMenuItems = response.data
+        } else {
+          this.error = response.error
+          return false
+        }
+        return true
+      } catch (error) {
+        console.error(error)
+        this.error = error
+        return false
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    // function to create a menu
+    async createMenu (data) {
+      this.isLoading = true
+      this.error = null
+      try {
+        const response = await createMenuApi(data)
+        if (response.success) {
+          
+          //Add the menu directly without calling the whole list
+          this.allMenuItems.push(response.data)
+          //await this.getAllMenuItems() // Pulls the updated list immediately
+          this.error = null
+        } else {
+          this.error = response.error
+          return false
+        }
+        return true
+      } catch (error) {
+        this.error = error
+        return false
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    // function to update a menu
+    async updateMenu (id, data) {
+      this.isLoading = true
+      this.error = null
+      try {
+        const response = await updateMenuApi(id, data)
+        if (response.success) {
+
+          //Update the menu directly without calling the whole list
+          const index = this.allMenuItems.findIndex(s => s.id === id)
+          if (index !== -1) {
+            this.allMenuItems[index] = response.data
+          }
+          //await this.getAllMenuItems() // Pulls the updated list immediately
+          this.error = null
+        } else {
+          this.error = response.error
+          return false
+        }
+        return true
+      } catch (error) {
+        this.error = error
+        return false
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    // function to delete a menu
+    async deleteMenu (id) {
+      this.isLoading = true
+      this.error = null
+      try {
+        const response = await deleteMenuApi(id)
+        if (response.success) {
+
+          // Remove the menu by referencing its exact id, directly without calling the whole list
+          this.allMenuItems = this.allMenuItems.filter(o => o.id !== id)
+          //await this.getAllMenuItems() // Pulls the updated list immediately
+          this.error = null
+        } else {
+          this.error = response.error
+          return false
+        }
+        return true
+      } catch (error) {
+        this.error = error
+        return false
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    // HR calls this to set/extend the deadline
+    async setWeekDeadline (weekString, isoDatetime) {
+      this.isLoading = true
+      this.error = null
+      try {
+        const response = await setWeekDeadlineApi(weekString, isoDatetime)
+        if (response.success) {
+          // Update local state
+          this.weekDeadlines[weekString] = isoDatetime
+          // Persist locally so staff see it immediately on the same browser
+          localStorage.setItem('foodhub:weekDeadlines', JSON.stringify(this.weekDeadlines))
+          this.error = null
+        } else {
+          this.error = response.error
+          return false
+        }
+        return true
+      } catch (error) {
+        this.error = error
+        return false
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    // Fetch deadline for a specific week from backend/mock
+    async getWeekDeadline (weekString) {
+      this.isLoading = true
+      this.error = null
+      try {
+        const response = await getWeekDeadlineApi(weekString)
+        if (response.success) {
+          this.weekDeadlines[weekString] = response.data && response.data.deadline ? response.data.deadline : null
+          localStorage.setItem('foodhub:weekDeadlines', JSON.stringify(this.weekDeadlines))
+          this.error = null
+        } else {
+          this.error = response.error
+          return false
+        }
+        return true
+      } catch (error) {
+        this.error = error
+        return false
+      } finally {
+        this.isLoading = false
+      }
+    },
+  },
+})
