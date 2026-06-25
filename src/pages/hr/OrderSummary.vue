@@ -11,6 +11,7 @@
   import { useStaffStore } from '@/stores/staff.store.js'
   import { formatDate, getWeekDates, getWeekString } from '@/utils/dateHelpers.js'
   import { exportOrdersToExcel, exportOrdersToPDF } from '@/utils/exportHelpers.js'
+  import SkeletonCard from '@/components/shared/SkeletonCard.vue'
 
   const { success: snackSuccess, error: snackError } = useSnackbar()
 
@@ -256,10 +257,17 @@
       </v-row>
 
       <!-- Loading State -->
-      <div v-if="isLoading" class="text-center py-12">
-        <v-progress-circular color="#D2451E" indeterminate size="45" />
-        <div class="mt-4">Loading orders...</div>
-      </div>
+      <v-row v-if="isLoading">
+        <v-col 
+          v-for = "i in 3"
+          :key="i"
+          cols="12"
+          md="4"
+          sm="12"
+        >
+          <SkeletonCard />
+        </v-col>
+      </v-row>
 
       <!-- Order Table -->
       <WeekOrderTable

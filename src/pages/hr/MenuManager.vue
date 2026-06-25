@@ -10,6 +10,7 @@
   import { useSnackbar } from '@/composables/useSnackbar.js'
   import { useWeekMenu } from '@/composables/useWeekMenu.js'
   import { formatDate, getWeekDates, getWeekString, parseLocalDate } from '@/utils/dateHelpers.js'
+  import SkeletonCard from '../../components/shared/SkeletonCard.vue'
   
   //Mobile responsiveness
   import { useDisplay } from 'vuetify'
@@ -235,8 +236,8 @@
         </div>
 
         <!-- Loading State -->
-        <div v-if="isLoading" class="text-center py-8">
-          <v-progress-circular color="#D2451E" indeterminate size="45" />
+        <div v-if="isLoading" class="d-flex flex-column ga-2">
+          <SkeletonCard v-for="i in 3" :key="i" />
         </div>
 
         <!-- Food Items List -->

@@ -8,6 +8,7 @@
   import { useOrderStore } from '@/stores/orders.store'
   import { getWeekString, parseLocalDate } from '@/utils/dateHelpers'
   import { useSnackbar } from '@/composables/useSnackbar'
+  import SkeletonCard from '@/components/shared/SkeletonCard.vue'
 
   // Load auth, order store, and menu store
   const { user } = useAuth()
@@ -238,9 +239,8 @@
   <AppShell>
     <div style="max-width: 1400px; margin: 0 auto; padding: 0 16px;">
       <!-- Loading State -->
-      <div v-if="isLoading" class="text-center py-12">
-        <v-progress-circular color="#D2451E" indeterminate size="45" />
-        <div class="mt-4">Loading your history...</div>
+      <div v-if="isLoading" class="d-flex flex-column ga-4">
+        <SkeletonCard v-for="i in 3" :key="i"/>
       </div>
 
       <div v-else>

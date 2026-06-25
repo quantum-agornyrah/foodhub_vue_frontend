@@ -10,6 +10,7 @@
   import { useMenuStore } from '@/stores/menu.store'
   import { useOrderStore } from '@/stores/orders.store'
   import { getWeekDates, getWeekString, parseLocalDate } from '@/utils/dateHelpers'
+  import SkeletonCard from '@/components/shared/SkeletonCard.vue'
 
   // Load composables and stores
   const { user } = useAuth()
@@ -184,10 +185,16 @@
   <AppShell>
     <div style="max-width: 1400px; margin: 0 auto; padding: 0 16px;">
       <!-- Loading State -->
-      <div v-if="isLoading" class="text-center py-12">
-        <v-progress-circular color="#D2451E" indeterminate size="45" />
-        <div class="mt-4">Loading dashboard...</div>
-      </div>
+      <v-row v-if="isLoading">
+        <v-col 
+          v-for="i in 3" :key="i" 
+          cols="12" 
+          md="4" 
+          sm="12"
+        >
+          <SkeletonCard />
+        </v-col>
+      </v-row>
 
       <div v-else>
         <!-- Greeting Header -->

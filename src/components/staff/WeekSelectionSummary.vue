@@ -78,11 +78,11 @@
     variant="flat"
   >
     <div class="font-weight-medium text-white mb-4" style="font-size: 20px;">
-      Your Order Summary
+      Your Order Actions
     </div>
 
     <!-- Summary List -->
-    <v-list class="pa-5 rounded-lg mb-6 d-flex flex-column ga-3">
+    <!-- <v-list class="pa-5 rounded-lg mb-6 d-flex flex-column ga-3">
       <div
         v-for="item in summaryItems"
         :key="item.date"
@@ -107,7 +107,7 @@
           </span>
         </div>
       </div>
-    </v-list>
+    </v-list> -->
 
     <!-- <v-alert
       v-if="isDeadlinePassed"

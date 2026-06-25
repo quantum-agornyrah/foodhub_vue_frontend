@@ -11,6 +11,7 @@
   import { useOrderStore } from '@/stores/orders.store.js'
   import { useStaffStore } from '@/stores/staff.store.js'
   import { getWeekDates, getWeekString } from '@/utils/dateHelpers.js'
+  import SkeletonCard from '../../components/shared/SkeletonCard.vue'
 
   const router = useRouter()
 
@@ -330,15 +331,17 @@
       </v-row>
 
       <!-- Loading State -->
-      <div v-if="isLoading" class="text-center py-12">
-        <v-progress-circular
-          color="#D2451E"
-          indeterminate
-          size="45"
-        />
-
-        <div class="mt-4">Loading menu...</div>
-      </div>
+      <v-row v-if="isLoading">
+        <v-col
+          v-for="i in 3"
+          :key="i"
+          cols="12"
+          md="4"
+          sm="12"
+        >
+          <SkeletonCard />
+        </v-col>
+      </v-row>
 
       <!-- Weekly Menu Grid -->
       <v-row v-else>
