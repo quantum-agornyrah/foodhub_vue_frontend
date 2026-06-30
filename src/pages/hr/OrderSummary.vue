@@ -1,6 +1,7 @@
 <script setup>
   import { storeToRefs } from 'pinia'
   import { computed, onMounted, ref } from 'vue'
+  import { useRouter } from 'vue-router'
   import AppShell from '@/components/layout/AppShell.vue'
   import WeekOrderTable from '@/components/orders/WeekOrderTable.vue'
   import WeekPicker from '@/components/shared/WeekPicker.vue'
@@ -13,6 +14,7 @@
   import { exportOrdersToExcel, exportOrdersToPDF } from '@/utils/exportHelpers.js'
   import SkeletonCard from '@/components/shared/SkeletonCard.vue'
 
+  const router = useRouter()
   const { success: snackSuccess, error: snackError } = useSnackbar()
 
   // Initialize stores
@@ -28,7 +30,7 @@
   const exportFormat = ref('pdf') // 'pdf' or 'excel'
 
   // Week offset state
-  const weekOffset = ref(0)
+  const weekOffset = ref(1)
   const isLoading = ref(false)
 
   // Fetch data on mount
@@ -95,8 +97,20 @@
       itemCounts[itemName] = (itemCounts[itemName] || 0) + 1
     }
 
-    const mostPopular = Object.entries(itemCounts)
-      .sort((a, b) => b[1] - a[1])[0]?.[0] || 'None'
+    const sortedItems = Object.entries(itemCounts).sort((a, b) => b[1] - a[1])
+    
+    let mostPopular = 'None'
+    if (sortedItems.length > 0) {
+      const topCount = sortedItems[0][1]
+      const topItems = sortedItems.filter(item => item[1] === topCount)
+      
+      if (topItems.length > 1) {
+        // Multiple items tied for most popular
+        mostPopular = topItems.map(item => item[0]).join(', ')
+      } else {
+        mostPopular = sortedItems[0][0]
+      }
+    }
 
     return [
       { title: 'Total orders', count: totalOrders },
@@ -156,13 +170,37 @@
     }
   }
 
+  // Smart back button fallback helper
+  function goBack() {
+    if (window.history.state && window.history.state.back) {
+      router.back()
+    } else {
+      router.push('/hr-dashboard')
+    }
+  }
+
 </script>
 
 <template>
   <AppShell>
     <div style="max-width: 1400px; margin: 0 auto; padding: 0 16px;">
+      <!-- Back button -->
+      <v-row class="d-flex align-center justify-space-between">
+        <v-col class="d-flex justify-start align-center" cols="12" sm="6">
+          <v-btn
+            prepend-icon="mdi-arrow-left"
+            variant="flat"
+            color="#D2451E"
+            class="mr-2 mt-4"
+            @click="goBack"
+          > 
+          Go back 
+          </v-btn>
+        </v-col>
+      </v-row>
+
       <!-- Page Header -->
-      <v-row class="d-flex mb-4 mt-8 align-center justify-space-between">
+      <v-row class="d-flex mb-4 mt-n1 mt-8 align-center justify-space-between">
         <v-col class="d-flex justify-start" cols="12" md="4" sm="6">
           <h1
             class="font-weight-bold text-display-medium"

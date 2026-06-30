@@ -36,25 +36,24 @@
   // Fetch data and hydrate selections on mount
   onMounted(async () => {
     try {
-
-      const mondayStr = getWeekString(new Date())
+      const nextWeekMonday = getWeekString(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))
 
       // Fetch menu and user orders in parallel
       await Promise.all([
-        fetchWeekMenu(mondayStr),
+        fetchWeekMenu(nextWeekMonday),
         orderStore.getMyOrders(user.value.id),
       ])
 
       // Hydrate selections draft:
       // Gather all valid menu dates
       const availableDates = weekDays.value.map(d => d.date)
-      initDraft(mondayStr, availableDates)
+      initDraft(nextWeekMonday, availableDates)
 
       // Pull existing database selections
-      const myOrdersThisWeek = orderStore.myOrders.filter(
-        o => o.weekString === mondayStr,
+      const myOrdersNextWeek = orderStore.myOrders.filter(
+        o => o.weekString === nextWeekMonday,
       )
-      for (const order of myOrdersThisWeek) {
+      for (const order of myOrdersNextWeek) {
         if (order.menuItemId) {
           selectItem(order.date, order.menuItemId)
         }
@@ -62,7 +61,6 @@
 
       updateCountdown()
       timer = setInterval(updateCountdown, 1000)
-      if (timer) clearInterval(timer)
       
     } catch (error) {
       console.error('Failed to load menu/order overview:', error)
@@ -71,9 +69,9 @@
     }
   })
 
-  const currentWeekStart = computed(() => getWeekString(new Date()))
+  const nextWeekStart = computed(() => getWeekString(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)))
 
-  const deadlineIso = computed(() => menuStore.deadlineByWeek(currentWeekStart.value))
+  const deadlineIso = computed(() => menuStore.deadlineByWeek(nextWeekStart.value))
   const deadlineLabel = computed(() => {
     if (!deadlineIso.value) return 'No deadline set'
     return new Date(deadlineIso.value).toLocaleString('en-US', {
@@ -87,11 +85,11 @@
   })
 
   const isCurrentWeekSubmitted = computed(() => {
-    const currentOrders = orderStore.myOrders.filter(
-      o => o.weekString === currentWeekStart.value,
+    const nextOrders = orderStore.myOrders.filter(
+      o => o.weekString === nextWeekStart.value,
     )
-    if (currentOrders.length === 0) return false
-    return currentOrders.every(o => o.status === 'submitted')
+    if (nextOrders.length === 0) return false
+    return nextOrders.every(o => o.status === 'submitted')
   })
 
   // --- Countdown Timer Logic ---
@@ -174,6 +172,20 @@
     await saveDraft()
     router.push('/staff-dashboard')
   }
+
+  // Smart back button fallback helper
+  function goBack() {
+    if (window.history.state && window.history.state.back) {
+      router.back()
+    } else {
+      router.push('/staff-dashboard')
+    }
+  }
+
+  // Clean up the timer when leaving the page
+  onUnmounted(() => {
+    if (timer) clearInterval(timer)
+  })
 </script>
 
 <template>
@@ -194,15 +206,30 @@
       </v-row>
 
       <div v-else>
+        <!-- Back button -->
+        <v-row class="d-flex align-center justify-space-between">
+          <v-col class="d-flex justify-start align-center" cols="12" sm="6">
+            <v-btn
+              prepend-icon="mdi-arrow-left"
+              variant="flat"
+              color="#D2451E"
+              class="mr-2 mt-4"
+              @click="goBack"
+            > 
+            Go back 
+            </v-btn>
+          </v-col>
+        </v-row>
+
         <!-- Header -->
-        <v-row class="d-flex mb-4 align-center justify-space-between">
-          <v-col class="d-flex justify-start" cols="12" sm="6">
+        <v-row class="d-flex mb-4 mt-n1 align-center justify-space-between">
+          <v-col class="d-flex justify-start align-center" cols="12" sm="6">
             <h1 class="font-weight-bold text-display-medium" style="color: #1E1E1E;">
-              Order this week
+              Order for Next Week
             </h1>
           </v-col>
 
-          <v-col class="d-flex justify-sm-end align-center" cols="12" sm="6">
+          <v-col class="d-flex flex-column ga-3 justify-sm-end align-end" cols="12" sm="6">
             <v-chip
               v-if="isCurrentWeekSubmitted"
               class="font-weight-bold px-4 py-5 text-white animate-pulse"
@@ -281,7 +308,7 @@
 
         <!-- Summary Section -->
         <v-row>
-          <v-col class="mx-auto" cols="12">
+          <v-col class="mr-auto" cols="12" md="4" sm="6">
             <WeekSelectionSummary
               :is-deadline-passed="isWeekDeadlinePassed || isCurrentWeekSubmitted"
               :is-saving-draft="isSavingDraft"

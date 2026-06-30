@@ -29,7 +29,14 @@
   const { success: snackSuccess, error: snackError } = useSnackbar()
 
   // Week offset state (0 = current week)
-  const weekOffset = ref(0)
+  const weekOffset = ref(1)
+
+  // Dynamic page title based on week offset
+  const pageTitle = computed(() => {
+    if (weekOffset.value === 0) return 'This week'
+    if (weekOffset.value === 1) return 'Next week'
+    return 'Week Overview'
+  })
 
   // Computed: current deadline for the visible week
   const currentWeekString = computed(() => getWeekString(getWeekDates(weekOffset.value)[0]))
@@ -60,7 +67,8 @@
 
   // Fetch all data on mount
   onMounted(async () => {
-    const weekStartDate = getWeekString(new Date())
+    // Fetch menu for next week FIRST
+    const weekStartDate = getWeekString(getWeekDates(1)[0])
 
     // Fetch all data in parallel
     await Promise.all([
@@ -166,12 +174,12 @@
 
   // Helper function inline or reuse formatDate from dateHelpers
   const weekMin = computed(() => {
-    const d = getWeekDates(weekOffset.value)[0]
+    const d = getWeekDates(0)[0]
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   })
 
   const weekMax = computed(() => {
-    const d = getWeekDates(weekOffset.value)[4]
+    const d = getWeekDates(0)[4]
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   })
 
@@ -194,7 +202,7 @@
             class="font-weight-bold text-display-medium"
             style="letter-spacing: 0.5px; color: #D2451E !important;"
           >
-            This week
+            {{ pageTitle }}
           </h1>
         </v-col>
 
@@ -245,7 +253,7 @@
               <!-- Left: label + current deadline display -->
               <div>
                 <div class="font-weight-medium mb-1" style="font-size: 20px; color: #1E1E1E;">
-                  Ordering deadline this week
+                  Deadline for next week's orders
                 </div>
 
                 <div v-if="savedDeadline" class="d-flex align-center ga-2">
@@ -261,7 +269,7 @@
                 </div>
 
                 <div v-else style="font-size: 16px; color: #1E1E1E;">
-                  No deadline set — staff can order any time
+                  No deadline set for next week — staff can order any time
                 </div>
               </div>
 

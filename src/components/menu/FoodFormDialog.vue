@@ -49,8 +49,11 @@
   ]
 
   const descriptionRules = [
-    v => !!v || 'Description is required',
-    v => (v && v.length >= 10) || 'Description must be at least 10 characters',
+    // v => !!v || 'Description is required',
+    v => {
+      if (v && v.length >= 10) return 'Description must be at least 10 characters'
+      return true
+    }
   ]
 
   const imageRules = [
@@ -208,7 +211,7 @@
           <div>
             <label class="font-weight-bold mb-2 d-block" style="color: #1E1E1E;">
               <v-icon class="mr-2">mdi-note-text-outline</v-icon>
-              Description *
+              Description
             </label>
 
             <v-textarea
