@@ -1,5 +1,5 @@
 <script setup>
-  import { computed, onMounted, onUnmounted, ref } from 'vue'
+  import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import AppShell from '@/components/layout/AppShell.vue'
   import DayOrderCard from '@/components/staff/DayOrderCard.vue'
@@ -62,6 +62,9 @@
       updateCountdown()
       timer = setInterval(updateCountdown, 1000)
       
+      // Poll the backend every 60 seconds for deadline changes made by HR
+      pollTimer = setInterval(() => menuStore.getWeekDeadline(nextWeekStart.value), 60_000)
+      
     } catch (error) {
       console.error('Failed to load menu/order overview:', error)
     } finally {
@@ -95,6 +98,7 @@
   // --- Countdown Timer Logic ---
   const countdown = ref({ days: 0, hours: 0, mins: 0, secs: 0 })
   let timer = null
+  let pollTimer = null   // ← polling interval for deadline refresh (60s)
 
   function updateCountdown () {
     if (!deadlineIso.value) return
@@ -117,6 +121,36 @@
       secs: totalSeconds % 60,
     }
   }
+
+  // Revert auto-submitted orders back to 'pending' when HR extends a passed deadline
+  async function revertExpiredOrders (weekString) {
+    const ordersToRevert = orderStore.myOrders.filter(
+      o => o.weekString === weekString && o.status === 'submitted',
+    )
+    for (const order of ordersToRevert) {
+      await orderStore.updateOrder(order.id, { ...order, status: 'pending' })
+    }
+    // Refresh so UI reflects the reverted status immediately
+    await orderStore.getMyOrders(user.value.id)
+  }
+
+  // Watch for HR extending a deadline that had already passed
+  watch(deadlineIso, async (newDeadline, oldDeadline) => {
+    if (!oldDeadline || !newDeadline) return
+
+    const wasPassed = new Date() > new Date(oldDeadline)
+    const nowPassed = new Date() > new Date(newDeadline)
+
+    if (wasPassed && !nowPassed) {
+      // Deadline was extended into the future → restart the countdown timer
+      if (timer) clearInterval(timer)
+      updateCountdown()
+      timer = setInterval(updateCountdown, 1000)
+
+      // Revert any auto-submitted orders back to pending so staff can edit again
+      await revertExpiredOrders(nextWeekStart.value)
+    }
+  })
 
   // Map day status and labels
   const mappedWeekDays = computed(() => {
@@ -187,6 +221,7 @@
   // Clean up the timer when leaving the page
   onUnmounted(() => {
     if (timer) clearInterval(timer)
+    if (pollTimer) clearInterval(pollTimer)
   })
 </script>
 

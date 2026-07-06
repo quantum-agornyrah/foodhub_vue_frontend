@@ -1,6 +1,6 @@
 <script setup>
   import { storeToRefs } from 'pinia'
-  import { computed, onMounted, ref } from 'vue'
+  import { computed, onMounted, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import AppShell from '@/components/layout/AppShell.vue'
   import DayMenuCard from '@/components/menu/DayMenuCard.vue'
@@ -61,6 +61,18 @@
       snackError('Failed to save deadline')
     }
   }
+
+  // Pre-fill the picker fields when HR re-opens the deadline menu
+  watch(showDeadlineMenu, (isOpen) => {
+    if (isOpen && savedDeadline.value) {
+      const d = new Date(savedDeadline.value)
+      const year  = d.getFullYear()
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const day   = String(d.getDate()).padStart(2, '0')
+      deadlineDate.value = `${year}-${month}-${day}`
+      deadlineTime.value = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+    }
+  })
 
   // Use the composable to fetch menu data
   const { weekMenu, weekDays, isLoading, fetchWeekMenu } = useWeekMenu()

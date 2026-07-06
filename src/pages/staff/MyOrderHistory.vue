@@ -1,5 +1,5 @@
 <script setup>
-  import { computed, onMounted, ref } from 'vue'
+  import { computed, onMounted, ref, onUnmounted } from 'vue'
   import { useRouter } from 'vue-router'
   import AppShell from '@/components/layout/AppShell.vue'
   import ReviewDialog from '@/components/shared/ReviewDialog.vue'
@@ -20,6 +20,7 @@
   const isLoading = ref(true)
   const search = ref('')
   const selectedMonth = ref('All Months')
+  let pollTimer = null   // ← polling interval for deadline refresh (60s)
 
   const headers = [
     { title: 'Week Date', key: 'title', sortable: false, width: '250px' },
@@ -53,6 +54,26 @@
 
       // Refetch to get updated data
       await orderStore.getMyOrders(user.value.id)
+
+      // Poll deadline changes from HR every 60 seconds
+      // 60_000 = 60 seconds. Change this value to adjust the interval.
+      pollTimer = setInterval(async () => {
+        const weekStrings = [...new Set(orderStore.myOrders.map(o => o.weekString))]
+        for (const weekString of weekStrings) {
+          const prevDeadline = menuStore.deadlineByWeek(weekString)
+          const wasPassed    = prevDeadline ? new Date() > new Date(prevDeadline) : false
+
+          await menuStore.getWeekDeadline(weekString)
+
+          const newDeadline = menuStore.deadlineByWeek(weekString)
+          const nowPassed   = newDeadline ? new Date() > new Date(newDeadline) : false
+
+          // If deadline flipped from past → future, revert auto-submitted orders
+          if (wasPassed && !nowPassed) {
+            await revertOrdersForWeek(weekString)
+          }
+        }
+      }, 60_000)
     } catch (error) {
       console.error('Failed to load history data:', error)
     } finally {
@@ -128,6 +149,18 @@
         })
       }
     }
+  }
+
+  // Counterpart to checkAndUpdateExpiredOrders:
+  // When HR extends a passed deadline, revert submitted orders back to 'pending'
+  async function revertOrdersForWeek (weekString) {
+    const ordersToRevert = orderStore.myOrders.filter(
+      o => o.weekString === weekString && o.status === 'submitted',
+    )
+    for (const order of ordersToRevert) {
+      await orderStore.updateOrder(order.id, { ...order, status: 'pending' })
+    }
+    await orderStore.getMyOrders(user.value.id)
   }
 
   // Group and format order weeks for listing
@@ -294,6 +327,10 @@
       const monthName = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
       return monthName === selectedMonth.value
     })
+  })
+
+  onUnmounted(() => {
+    if (pollTimer) clearInterval(pollTimer)
   })
 </script>
 
