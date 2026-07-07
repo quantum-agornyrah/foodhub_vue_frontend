@@ -53,61 +53,6 @@ export async function getAllMenuItemsApi () {
   }
 }
 
-// function of axios api to create request
-// export async function createMenuApi (data) {
-//   try {
-//     // Map frontend camelCase to backend snake_case schemas
-//     const backendData = {
-//       id: Math.floor(Math.random() * 1_000_000), // Backend requires an ID in body
-//       title: data.title,
-//       description: data.description,
-//       image_url: data.imageUrl,
-//       type: data.type,
-//       day: data.day,
-//       date: data.date,
-//       week_string: data.weekString,
-//       status: data.status,
-//     }
-
-//     const response = await api.post('/menu/create', backendData)
-//     const menuItem = response.data
-
-//     return {
-//       success: true,
-//       data: {
-//         id: menuItem.id,
-//         title: menuItem.title,
-//         description: menuItem.description,
-//         imageUrl: menuItem.image_url,
-//         type: menuItem.type,
-//         day: menuItem.day,
-//         date: menuItem.date,
-//         weekString: menuItem.week_string,
-//         status: menuItem.status,
-//       },
-//     }
-//   } catch (error) {
-//     if (import.meta.env.VITE_USE_MOCK_MENU === 'true') {
-//       const menuItems = getMockMenuItems()
-
-//       const menuItem = {
-//         id: Date.now(),
-//         ...data,
-//       }
-
-//       menuItems.push(menuItem)
-//       saveMockMenuItems(menuItems)
-
-//       return {
-//         success: true,
-//         data: menuItem,
-//       }
-//     }
-
-//     throw error
-//   }
-// }
-
 export async function createMenuApi (data) {
     try {
         let imageUrl = data.imageUrl || ''
@@ -158,6 +103,84 @@ export async function createMenuApi (data) {
             menuItems.push(menuItem)
             saveMockMenuItems(menuItems)
             return { success: true, data: menuItem }
+        }
+        throw error
+    }
+}
+
+function mapMenuItemFromBackend (menuItem) {
+  return {
+    id: menuItem.id,
+    title: menuItem.title,
+    description: menuItem.description,
+    imageUrl: menuItem.image_url,
+    type: menuItem.type,
+    day: menuItem.day,
+    date: menuItem.date,
+    weekString: menuItem.week_string,
+    status: menuItem.status,
+  }
+}
+
+//function of axios api to create BULK menus
+export async function createBulkMenuApi (items) {
+  try {
+    //Concurrently upload any selected image files first
+    const uploadBulk = items.map(async item => {
+      let imageUrl = item.imageUrl || ''
+
+      if (item.imageFile) {
+        const uploadFormData = new FormData()
+        uploadFormData.append('file', item.imageFile)
+
+        const uploadRes = await api.post('/menu/upload-image', uploadFormData, {
+          headers: { 'Content-Type': 'multipart/form-data'}
+        })
+        imageUrl = uploadRes.data.image_url
+      }
+
+      return{
+        ...item,
+        imageUrl,
+      }
+    })
+
+    const itemsWithUrls = await Promise.all(uploadBulk)
+
+    //Map items to backend schema format
+    const backendItems = itemsWithUrls.map(item => ({
+      week_string: item.weekString,
+      date: item.date,
+      day: item.day,
+      title: item.title,
+      description: item.description || '',
+      image_url: item.imageUrl || '',
+      type: item.type,
+      status: item.status || null,
+    }))
+
+    const response = await api.post('/menu/bulk-create', {
+      items: backendItems
+    })
+
+    return {
+      success: true,
+      data: response.data.map(mapMenuItemFromBackend),
+    }
+    } catch (error) {
+        if (import.meta.env.VITE_USE_MOCK_MENU === 'true') {
+            const menuItems = getMockMenuItems()
+            const created = items.map((item, index) => ({
+              id: Date.now() + index,
+              ...item,
+            }))
+            menuItems.push(...created)
+            saveMockMenuItems(menuItems)
+
+            return{
+              success: true,
+              data: created,
+            }
         }
         throw error
     }

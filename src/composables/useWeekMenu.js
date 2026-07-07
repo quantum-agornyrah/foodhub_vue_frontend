@@ -193,6 +193,7 @@ export function useWeekMenu () {
 
     // HR store actions passed through so HR views don't import the store directly
     createMenu: menuStore.createMenu,
+    createBulkMenu: menuStore.createBulkMenu,
     updateMenu: menuStore.updateMenu,
     deleteMenu: menuStore.deleteMenu,
   }

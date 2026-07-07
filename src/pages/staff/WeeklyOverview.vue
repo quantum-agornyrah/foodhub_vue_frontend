@@ -201,12 +201,12 @@
   // Action handlers
   async function handleSubmit () {
     await submitDraft()
-    router.push('/staff-dashboard')
+    router.push('/my-order-history')
   }
 
   async function handleSaveDraft () {
     await saveDraft()
-    router.push('/staff-dashboard')
+    router.push('/my-order-history')
   }
 
   // Smart back button fallback helper

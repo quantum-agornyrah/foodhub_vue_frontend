@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { createMenuApi, deleteMenuApi, getAllMenuItemsApi, getWeekDeadlineApi, setWeekDeadlineApi, updateMenuApi } from '../api/menu.api.js'
+import { createMenuApi, createBulkMenuApi, deleteMenuApi, getAllMenuItemsApi, getWeekDeadlineApi, setWeekDeadlineApi, updateMenuApi } from '../api/menu.api.js'
 
 export const useMenuStore = defineStore('menu', {
   state: () => ({
@@ -62,6 +62,31 @@ export const useMenuStore = defineStore('menu', {
           return false
         }
         return true
+      } catch (error) {
+        this.error = error
+        return false
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    // function to create a BULK menu
+    async createBulkMenu (items) {
+      this.isLoading = true
+      this.error = null
+      try {
+        const response = await createBulkMenuApi(items)
+        if (response.success) {
+          
+          //Add the menu directly without calling the whole list
+          this.allMenuItems.push(...response.data)
+          //await this.getAllMenuItems() // Pulls the updated list immediately
+          this.error = null
+          return true
+        } else {
+          this.error = response.error
+          return false
+        }
       } catch (error) {
         this.error = error
         return false

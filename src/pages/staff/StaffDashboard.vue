@@ -207,6 +207,11 @@
       }
     }).sort((a, b) => b.weekStart.localeCompare(a.weekStart)) // Newest first
   })
+
+  //Function to only show the last 3 weeks
+  const recentPreviousWeeks = computed(() => {
+    return previousWeeks.value.slice(0, 3)
+  })
 </script>
 
 <template>
@@ -224,7 +229,7 @@
         </v-col>
       </v-row>
 
-      <div v-else>
+      <div v-else class="mb-10">
         <!-- Greeting Header -->
         <div class="mb-6">
           <h1 class="font-weight-bold text-display-medium" style="color: #1E1E1E;">
@@ -317,15 +322,27 @@
 
         <v-divider class="border-opacity-25 my-6" />
 
-        <!-- Section 2: Previous Weeks -->
+        <!-- Section 2: Recent Order History -->
         <div>
-          <h2 class="font-weight-bold mb-4" style="color: #1E1E1E;">
-            Previous weeks
-          </h2>
+          <div class="d-flex flex-column flex-sm-row justify-space-between align-sm-center ga-3 mb-4">
+            <h2 class="font-weight-bold mb-4" style="color: #1E1E1E;">
+              Recent Order History
+            </h2>
 
-          <div v-if="previousWeeks.length > 0">
+            <v-btn
+              color="#D2451E"
+              prepend-icon="mdi-history"
+              variant="outlined"
+              class="text-capitalize font-weight-bold"
+              @click="router.push('/my-order-history')"
+            >
+             View All History
+            </v-btn>
+          </div>
+
+          <div v-if="recentPreviousWeeks.length > 0">
             <PreviousWeekCard
-              v-for="week in previousWeeks"
+              v-for="week in recentPreviousWeeks"
               :key="week.weekStart"
               :status="week.status"
               :subtitle="week.subtitle"
@@ -345,7 +362,7 @@
             </v-icon>
 
             <div class="font-weight-medium" style="color: #1E1E1E; font-size: 20px;">
-              No previous order weeks found.
+              No recent order history found.
             </div>
           </v-card>
         </div>
@@ -354,7 +371,7 @@
   </AppShell>
 </template>
 
-<style scoped>
+<style scoped> 
 .clickable-image {
   cursor: pointer;
   transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
