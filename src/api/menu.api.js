@@ -19,9 +19,9 @@ function saveMockMenuItems (menuItems) {
 }
 
 // function of axios api to get all requests
-export async function getAllMenuItemsApi () {
+export async function getAllMenuItemsApi (params = {}) {
   try {
-    const response = await api.get('/menu/all')
+    const response = await api.get('/menu/all', { params })
     const menuItems = response.data
 
     // Map snake_case database responses to frontend camelCase

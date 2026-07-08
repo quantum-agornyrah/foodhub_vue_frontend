@@ -319,6 +319,7 @@
                     :src="item.imageUrl"
                     :alt="item.title"
                     cover
+                    loading="lazy"
                   >
                     <template #error>
                       <div class="d-flex align-center justify-center fill-height bg-grey-lighten-3">

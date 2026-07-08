@@ -271,6 +271,7 @@
                   cover
                   height="200"
                   :src="day.imageUrl"
+                  loading="lazy"
                   @click="router.push('/weekly-overview')"
                 >
                   <template #error>
