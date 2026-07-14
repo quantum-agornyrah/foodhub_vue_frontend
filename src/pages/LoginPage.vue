@@ -64,9 +64,9 @@
 </script>
 
 <template>
-  <v-main class="d-flex align-center justify-center" :style="{ backgroundImage: `url(${loginBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }">
+  <v-main class="d-flex align-center justify-center pa-sm-4" :style="{ backgroundImage: `url(${loginBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }">
     <v-card
-      class="pa-8 mx-auto"
+      class="pa-4 pa-sm-8 mx-auto"
       elevation="0"
       max-width="420"
       style="border: 0.5px solid #D2451E; border-radius: 2px;"

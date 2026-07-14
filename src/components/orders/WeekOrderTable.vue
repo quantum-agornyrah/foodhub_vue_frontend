@@ -102,12 +102,12 @@
         label="Search staff..."
         prepend-inner-icon="mdi-magnify"
         single-line
-        style="max-width: 400px;"
+        style="max-width: 400px; width: 100%"
         variant="outlined"
       />
 
       <v-spacer />
-      <span class="text-subtitle">{{ tableData.length }} staff members</span>
+      <span class="text-subtitle d-none d-sm-inline">{{ tableData.length }} staff members</span>
     </v-card-title>
 
     <!-- DataTable -->

@@ -256,8 +256,9 @@
               :key="day.dayName"
               class="pa-0 flex-grow-1 d-flex flex-column"
               cols="12"
-              md="2"
-              sm="5"
+              sm="6"
+              md="4"
+              lg="2"
             >
               <v-card
                 class="pa-0 rounded-lg overflow-hidden flex-grow-1 d-flex flex-column"

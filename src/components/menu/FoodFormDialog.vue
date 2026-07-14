@@ -171,10 +171,10 @@
       <v-card-title class="px-8" style="background-color: #D2451E;">
         <div class="d-flex justify-space-between align-center">
           <div class="d-flex align-center ga-3">
-            <v-icon class="mr-2" color="white">
+            <v-icon class="mr-2" size="26" color="white">
               {{ foodItem ? 'mdi-pencil-box-outline' : 'mdi-plus-box-outline' }}
             </v-icon>
-            <h2 class="text-title-large font-weight-bold text-white">
+            <h2 class="text-title-medium font-weight-bold text-white">
               {{ dialogTitle }}
             </h2>
           </div>
@@ -313,11 +313,11 @@
       </v-card-text>
 
       <!-- Dialog Actions -->
-      <v-card-actions class="pa-6 pt-0">
-        <v-spacer />
+      <v-card-actions class="pa-4 pa-sm-6 pt-0 d-flex flex-column-reverse flex-sm-row justify-end ga-3">
+        <v-spacer class="d-none d-sm-block" />
 
         <v-btn
-          class="text-capitalize font-weight-bold px-14"
+          class="text-capitalize font-weight-bold px-sm-14 w-100 w-sm-auto"
           color="#1E1E1E"
           variant="outlined"
           @click="handleClose"
@@ -326,7 +326,7 @@
         </v-btn>
 
         <v-btn
-          class="text-capitalize font-weight-bold px-14"
+          class="text-capitalize font-weight-bold px-sm-14 w-100 w-sm-auto ml-0 ml-sm-2"
           color="#D2451E"
           :disabled="!isValid || loading"
           :loading="loading"

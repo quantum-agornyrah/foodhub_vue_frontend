@@ -47,10 +47,10 @@
       <v-card-title class="px-8" style="background-color: #D2451E;">
         <div class="d-flex justify-space-between align-center">
           <div class="d-flex align-center ga-3">
-            <v-icon class="mr-2" color="white">
+            <v-icon color="white" size="26">
               {{ readonly ? 'mdi-comment-text-multiple-outline' : 'mdi-star-face' }}
             </v-icon>
-            <h2 class="text-title-large font-weight-bold text-white">
+            <h2 class="text-title-medium font-weight-bold text-white">
               {{ readonly ? 'Staff Review' : 'Review Your Meal' }}
             </h2>
           </div>
@@ -77,6 +77,8 @@
             color="amber"
             :readonly="readonly"
             size="large"
+            class="ml-n3"
+            density="comfortable"
           />
         </div>
 
@@ -98,12 +100,12 @@
       </v-card-text>
 
       <!-- Dialog Actions -->
-      <v-card-actions class="pa-6 pt-0">
-        <v-spacer />
+      <v-card-actions class="pa-4 pa-sm-6 pt-0 d-flex flex-column-reverse flex-sm-row justify-end ga-3">
+        <v-spacer class="d-none d-sm-block" />
 
         <v-btn
           v-if="!readonly"
-          class="text-capitalize font-weight-bold px-8"
+          class="text-capitalize font-weight-bold px-sm-8 w-100 w-sm-auto"
           color="#D2451E"
           variant="outlined"
           @click="resetForm"
@@ -113,7 +115,7 @@
 
         <v-btn
           v-if="!readonly"
-          class="text-capitalize font-weight-bold px-8"
+          class="text-capitalize font-weight-bold px-sm-8 w-100 w-sm-auto ml-0 ml-sm-2"
           color="#D2451E"
           variant="flat"
           :disabled="loading"
