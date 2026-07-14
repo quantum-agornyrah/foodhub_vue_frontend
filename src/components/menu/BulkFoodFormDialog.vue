@@ -136,7 +136,7 @@
           <div class="d-flex align-center ga-3">
             <v-icon color="white" size="26">mdi-format-list-bulleted-triangle </v-icon>
             <h2 class="text-title-medium font-weight-bold text-white">
-              Add Multiple Food Items
+              Add Food Items
             </h2>
           </div>
 
