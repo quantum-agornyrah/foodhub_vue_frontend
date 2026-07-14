@@ -1,4 +1,5 @@
 <script setup>
+  import { useDisplay } from 'vuetify'
   import { computed, ref, watch } from 'vue'
   import { VENDORS } from '@/constants/vendors'
 
@@ -18,6 +19,7 @@
   const rows = ref([])
 
   const vendorOptions = [...VENDORS, 'Other']
+  const { mobile } = useDisplay()
 
   // Form validation
   const titleRules = [
@@ -132,8 +134,8 @@
       <v-card-title class="px-8" style="background-color: #D2451E;">
         <div class="d-flex justify-space-between align-center">
           <div class="d-flex align-center ga-3">
-            <v-icon color="white">mdi-format-list-bulleted-triangle </v-icon>
-            <h2 class="text-title-large font-weight-bold text-white">
+            <v-icon color="white" size="26">mdi-format-list-bulleted-triangle </v-icon>
+            <h2 class="text-title-medium font-weight-bold text-white">
               Add Multiple Food Items
             </h2>
           </div>
@@ -164,11 +166,12 @@
 
                 <v-btn
                   color="#D2451E"
-                  prepend-icon="mdi-delete-outline"
-                  variant="flat"
+                  :icon="mobile"
+                  :variant="mobile ? 'text' : 'flat'"
                   @click="removeRow(index)"
                 > 
-                  Remove Item
+                  <v-icon :class="{ 'mr-sm-2': !mobile }">mdi-delete-outline</v-icon>
+                  <span class="d-none d-lg-inline">Remove Item</span>
                 </v-btn>
               </div>
 
@@ -239,9 +242,9 @@
         </v-form>
       </v-card-text>
 
-      <v-card-actions class="pa-6 pt-0">
+      <v-card-actions class="pa-4 pa-sm-6 pt-0 d-flex flex-column flex-sm-row ga-3">
         <v-btn
-          class="text-capitalize font-weight-bold px-5"
+          class="text-capitalize font-weight-bold px-5 w-100 w-sm-auto"
           color="#D2451E"
           prepend-icon="mdi-plus"
           variant="outlined"
@@ -253,7 +256,7 @@
         <v-spacer />
 
         <v-btn
-          class="text-capitalize font-weight-bold px-10"
+          class="text-capitalize font-weight-bold px-sm-10 w-100 w-sm-auto"
           color="#1E1E1E"
           :disabled="loading"
           variant="outlined"
@@ -263,7 +266,7 @@
         </v-btn>
 
         <v-btn
-          class="text-capitalize font-weight-bold px-10"
+          class="text-capitalize font-weight-bold px-sm-10 w-100 w-sm-auto ml-0 ml-sm-2"
           color="#D2451E"
           :disabled="!hasValidRows || loading"
           :loading="loading"

@@ -6,8 +6,8 @@
   import { useMenuStore } from '../../stores/menu.store.js'
   import HrNav from './HrNav.vue'
   import StaffNav from './StaffNav.vue'
+  
   const { mobile } = useDisplay()
-
   const authStore = useAuthStore()
   const menuStore = useMenuStore()
   const router = useRouter()
@@ -95,10 +95,10 @@
         />
       </template>
 
-      <v-app-bar-title class="font-weight-bold text-white text-center">
+      <v-app-bar-title class="d-flex justify-center font-weight-bold text-white">
         <div>
-          <v-avatar class="mr-3" color="#F9ECEE" rounded="lg" size="43">
-            <v-icon color="#D2451E" size="35">mdi-food-fork-drink</v-icon>
+          <v-avatar class="mr-3" color="#F9ECEE" rounded="lg" size="40">
+            <v-icon color="#D2451E" size="33">mdi-food-fork-drink</v-icon>
           </v-avatar>
 
           <span class="font-weight-bold text-title-large">FoodHub</span>

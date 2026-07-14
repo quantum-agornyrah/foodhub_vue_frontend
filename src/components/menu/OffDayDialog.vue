@@ -117,9 +117,9 @@
       <v-card-title class="px-8" style="background-color: #D2451E;">
         <div class="d-flex justify-space-between align-center">
           <div class="d-flex align-center ga-3">
-            <v-icon color="white" size="28">mdi-calendar-remove</v-icon>
+            <v-icon color="white" size="26">mdi-calendar-remove</v-icon>
 
-            <h2 class="text-title-large font-weight-bold text-white">
+            <h2 class="text-title-medium font-weight-bold text-white">
               Mark as Off Day
             </h2>
           </div>
@@ -199,11 +199,11 @@
       </v-card-text>
 
       <!-- Dialog Actions -->
-      <v-card-actions class="pa-6 pt-0">
-        <v-spacer />
+      <v-card-actions class="pa-4 pa-sm-6 pt-0 d-flex flex-column-reverse flex-sm-row justify-end ga-3">
+        <v-spacer class="d-none d-sm-block" />
 
         <v-btn
-          class="text-capitalize font-weight-bold px-14"
+          class="text-capitalize font-weight-bold px-sm-14 w-100 w-sm-auto"
           color="#1E1E1E"
           :disabled="isLoading"
           variant="outlined"
@@ -213,7 +213,7 @@
         </v-btn>
 
         <v-btn
-          class="text-capitalize font-weight-bold px-8"
+          class="text-capitalize font-weight-bold px-sm-8 w-100 w-sm-auto ml-0 ml-sm-2"
           color="#D2451E"
           :loading="isLoading"
           prepend-icon="mdi-calendar-remove"

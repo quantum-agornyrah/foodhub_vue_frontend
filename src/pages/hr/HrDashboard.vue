@@ -245,7 +245,7 @@
               {{ stat.title }}
             </div>
 
-            <div class="font-weight-medium" style="font-size: 45px; color: #1E1E1E;">
+            <div class="font-weight-medium" style="font-size: clamp(30px, 6vw, 45px); color: #1E1E1E;">
               {{ stat.count }}
             </div>
           </v-card>

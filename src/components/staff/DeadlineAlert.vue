@@ -59,7 +59,7 @@
 
 <template>
   <v-card
-    class="pa-5 d-flex align-center justify-space-between cursor-pointer"
+    class="pa-4 pa-sm-5 d-flex flex-column flex-sm-row align-start align-sm-center justify-space-between ga-3 cursor-pointer"
     :class="{ 'pulse-alert': isUrgent }"
     elevation="2"
     ripple
@@ -67,42 +67,45 @@
     :to="to"
     variant="flat"
   >
-    <!-- Icon Container -->
-    <v-avatar class="mr-4" color="white" rounded="lg" size="48">
-      <v-icon :color="isPassed ? '#D2451E' : (isUrgent ? '#D2451E' : '#D2451E')" size="33">
-        {{ isPassed ? 'mdi-alert-circle' : (isUrgent ? 'mdi-alert-decagram' : 'mdi-calendar-clock') }}
-      </v-icon>
-    </v-avatar>
+    <!-- Left: Icon + Text Container Wrapper -->
+    <div class="d-flex align-center flex-grow-1 min-width-0 w-100">
+      <!-- Responsive Avatar -->
+      <v-avatar class="mr-3 mr-sm-4 flex-shrink-0" color="white" rounded="lg" size="40" size-sm="48">
+        <v-icon :color="isPassed ? '#D2451E' : '#D2451E'" size="24" size-sm="33">
+          {{ isPassed ? 'mdi-alert-circle' : (isUrgent ? 'mdi-alert-decagram' : 'mdi-calendar-clock') }}
+        </v-icon>
+      </v-avatar>
 
-    <!-- Text Section -->
-    <div class="flex-grow-1">
-      <div class="font-weight-bold" :style="{ color: 'white' }" style="font-size: 20px;">
-        {{ isPassed ? 'Ordering deadline has passed' : (isUrgent ? 'Urgent: Click this banner to Complete your meal selection!' : 'Click this banner to Select your meals for next week') }}
-      </div>
+      <!-- Responsive Text -->
+      <div class="flex-grow-1 min-width-0">
+        <div class="font-weight-bold text-white text-title-large text-sm-h3 lh-tight text-wrap">
+          {{ isPassed ? 'Ordering deadline has passed' : (isUrgent ? 'Urgent: Click this banner to complete your meal selection!' : 'Click this banner to select your meals for next week') }}
+        </div>
 
-      <div :style="{ color: isPassed ? 'white' : 'white' }" class="font-weight-medium">
-        <template v-if="isPassed">
-          Meal selection is now locked for next week.
-        </template>
-        <template v-else-if="isUrgent">
-          Deadline in:
-          {{ countdown.days }}d :
-          {{ String(countdown.hours).padStart(2,'0') }}hrs :
-          {{ String(countdown.mins).padStart(2,'0') }}mins :
-          {{ String(countdown.secs).padStart(2,'0') }}secs left!
-        </template>
-        <template v-else>
-          Deadline in:
-          {{ countdown.days }}d :
-          {{ String(countdown.hours).padStart(2,'0') }}hrs :
-          {{ String(countdown.mins).padStart(2,'0') }}mins :
-          {{ String(countdown.secs).padStart(2,'0') }}secs left
-        </template>
+        <div class="font-weight-medium text-white text-body-2 text-sm-body-1 mt-1">
+          <template v-if="isPassed">
+            Meal selection is now locked for next week.
+          </template>
+          <template v-else-if="isUrgent">
+            Deadline in:
+            {{ countdown.days }}d :
+            {{ String(countdown.hours).padStart(2,'0') }}hrs :
+            {{ String(countdown.mins).padStart(2,'0') }}mins :
+            {{ String(countdown.secs).padStart(2,'0') }}secs left!
+          </template>
+          <template v-else>
+            Deadline in:
+            {{ countdown.days }}d :
+            {{ String(countdown.hours).padStart(2,'0') }}hrs :
+            {{ String(countdown.mins).padStart(2,'0') }}mins :
+            {{ String(countdown.secs).padStart(2,'0') }}secs left
+          </template>
+        </div>
       </div>
     </div>
 
     <!-- Arrow Icon -->
-    <v-icon class="ml-2" color="white" size="48">mdi-arrow-right</v-icon>
+    <v-icon class="ml-auto ml-sm-2 d-none d-sm-flex" color="white" size="36" size-sm="48">mdi-arrow-right</v-icon>
   </v-card>
 </template>
 
