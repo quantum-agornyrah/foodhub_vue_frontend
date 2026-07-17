@@ -1,8 +1,4 @@
-export const VENDORS = [
-  'Vongees',
-  'HomeMade',
-  'Kente',
-]
+export const VENDORS = ['Vongees','HomeMade','Kente']
 
 // Primary colors for chips and badges
 export const VENDOR_COLORS = {

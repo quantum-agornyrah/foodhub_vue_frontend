@@ -1,11 +1,5 @@
 import { defineStore } from 'pinia'
-import {
-  createStaffApi,
-  deactivateStaffApi,
-  deleteStaffApi,
-  getAllStaffApi,
-  updateStaffApi,
-} from '../api/staff.api.js'
+import { createStaffApi, deactivateStaffApi, deleteStaffApi, getAllStaffApi, updateStaffApi } from '../api/staff.api.js'
 import { DEPARTMENTS } from '../constants/departments.js'
 
 export const useStaffStore = defineStore('staff', {

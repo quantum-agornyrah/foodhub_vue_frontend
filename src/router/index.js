@@ -2,22 +2,34 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth.store.js'
 import { requireAuth } from './guards.js'
 
+// NB:
+// createWebHistory(): Clean URLs (e.g., /staff-dashboard)
+// createWebHashHistory(): Hash URLs (e.g., /#/staff-dashboard)
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
       redirect: () => {
+
+        // Access the authentication store i.e isAutehnticated state
         const authStore = useAuthStore()
+
+        // If isAuthenticated is FALSE
         if (!authStore.isAuthenticated) {
           return '/login'
         }
+
+        // If TRUE and getter role is either HR or not;
         return authStore.isHR ? '/hr-dashboard' : '/staff-dashboard'
       },
     },
     {
       path: '/login',
       name: 'LoginPage',
+
+      // Lazy loading technique
       component: () => import('@/pages/LoginPage.vue'),
       meta: { requiresAuth: false },
     },
@@ -41,7 +53,9 @@ const router = createRouter({
 
       // Implementing lazy loading
       component: () => import('@/pages/staff/StaffDashboard.vue'),
-      meta: { requiresAuth: true, roles: ['staff'] },
+
+      // Protected routing based on role
+      meta: { requiresAuth: true, roles: ['staff'] }, 
     },
     {
       path: '/my-order-history',
@@ -95,6 +109,8 @@ const router = createRouter({
   ],
 })
 
+// Before route change i.e from dashboard to menu manager, 
+// this runs first
 // Attach the guard to the router
 router.beforeEach(requireAuth)
 

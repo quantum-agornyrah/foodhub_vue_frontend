@@ -18,7 +18,24 @@ function saveMockMenuItems (menuItems) {
   window.localStorage.setItem('mockMenuItems', JSON.stringify(menuItems))
 }
 
-// function of axios api to get all requests
+// A helper function to map menu items to look similar to the backend
+// From frontend's CAMELCASE to backend's SNAKECASE
+function mapMenuItemFromBackend (menuItem) {
+  return {
+    id: menuItem.id,
+    title: menuItem.title,
+    description: menuItem.description,
+    imageUrl: menuItem.image_url,
+    type: menuItem.type,
+    day: menuItem.day,
+    date: menuItem.date,
+    weekString: menuItem.week_string,
+    status: menuItem.status,
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// function of axios api to get all menus
 export async function getAllMenuItemsApi (params = {}) {
   try {
     const response = await api.get('/menu/all', { params })
@@ -42,6 +59,8 @@ export async function getAllMenuItemsApi (params = {}) {
       data: mapped,
     }
   } catch (error) {
+
+    // Use mock json data if api or backend is not available
     if (import.meta.env.VITE_USE_MOCK_MENU === 'true') {
       return {
         success: true,
@@ -53,6 +72,8 @@ export async function getAllMenuItemsApi (params = {}) {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// function of axios api to create menu
 export async function createMenuApi (data) {
     try {
         let imageUrl = data.imageUrl || ''
@@ -61,9 +82,13 @@ export async function createMenuApi (data) {
         if (data.imageFile) {
             const uploadFormData = new FormData()
             uploadFormData.append('file', data.imageFile)
+
+            // Make an api call to the backned to send the image file 
             const uploadRes = await api.post('/menu/upload-image', uploadFormData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             })
+
+            // Get URL from the backend
             imageUrl = uploadRes.data.image_url
         }
 
@@ -97,6 +122,8 @@ export async function createMenuApi (data) {
             },
         }
     } catch (error) {
+
+      // Use mock json data if api or backend is not available
         if (import.meta.env.VITE_USE_MOCK_MENU === 'true') {
             const menuItems = getMockMenuItems()
             const menuItem = { id: Date.now(), ...data }
@@ -108,20 +135,7 @@ export async function createMenuApi (data) {
     }
 }
 
-function mapMenuItemFromBackend (menuItem) {
-  return {
-    id: menuItem.id,
-    title: menuItem.title,
-    description: menuItem.description,
-    imageUrl: menuItem.image_url,
-    type: menuItem.type,
-    day: menuItem.day,
-    date: menuItem.date,
-    weekString: menuItem.week_string,
-    status: menuItem.status,
-  }
-}
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //function of axios api to create BULK menus
 export async function createBulkMenuApi (items) {
   try {
@@ -185,6 +199,8 @@ export async function createBulkMenuApi (items) {
       // }
     }
   } catch (error) {
+
+        // Use mock json data if api or backend is not available
         if (import.meta.env.VITE_USE_MOCK_MENU === 'true') {
             const menuItems = getMockMenuItems()
             const created = items.map((item, index) => ({
@@ -203,7 +219,8 @@ export async function createBulkMenuApi (items) {
     }
 }
 
-// function of axios api to update request
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// function of axios api to update menu
 export async function updateMenuApi (id, data) {
   try {
     let imageUrl = data.imageUrl || ''
@@ -212,6 +229,7 @@ export async function updateMenuApi (id, data) {
     if (data.imageFile) {
       const uploadFormData = new FormData()
       uploadFormData.append('file', data.imageFile)
+
       const uploadRes = await api.post('/menu/upload-image', uploadFormData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
@@ -249,6 +267,8 @@ export async function updateMenuApi (id, data) {
     }
   } catch (error) {
     if (import.meta.env.VITE_USE_MOCK_MENU === 'true') {
+
+      // Use mock json data if api or backend is not available
       const menuItems = getMockMenuItems()
 
       const index = menuItems.findIndex(r => String(r.id) === String(id))
@@ -277,7 +297,8 @@ export async function updateMenuApi (id, data) {
   }
 }
 
-// function of axios api to delete request
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// function of axios api to delete menu
 export async function deleteMenuApi (id) {
   try {
     const response = await api.delete(`/menu/delete/${id}`)
@@ -286,6 +307,8 @@ export async function deleteMenuApi (id) {
       data: response.data,
     }
   } catch (error) {
+
+    // Use mock json data if api or backend is not available
     if (import.meta.env.VITE_USE_MOCK_MENU === 'true') {
       const menuItems = getMockMenuItems()
       const filteredMenuItems = menuItems.filter(
@@ -303,6 +326,7 @@ export async function deleteMenuApi (id) {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Function to set the ordering deadline for a week
 export async function setWeekDeadlineApi (weekString, isoDatetime) {
   try {
@@ -317,7 +341,8 @@ export async function setWeekDeadlineApi (weekString, isoDatetime) {
     }
   } catch (error) {
     if (import.meta.env.VITE_USE_MOCK_MENU === 'true') {
-      // Mock fallback: simulate success in dev/mock mode
+
+      // Use mock json data if api or backend is not available
       return {
         success: true,
         data: { week_string: weekString, deadline: isoDatetime },
@@ -328,6 +353,7 @@ export async function setWeekDeadlineApi (weekString, isoDatetime) {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Function to get the ordering deadline for a week
 export async function getWeekDeadlineApi (weekString) {
   try {
@@ -338,6 +364,8 @@ export async function getWeekDeadlineApi (weekString) {
     }
   } catch (error) {
     if (import.meta.env.VITE_USE_MOCK_MENU === 'true') {
+
+      // Use mock json data if api or backend is not available
       const saved = window.localStorage.getItem('foodhub:weekDeadlines')
       const deadlines = saved ? JSON.parse(saved) : {}
 

@@ -18,6 +18,7 @@ function saveMockOrders (orders) {
   window.localStorage.setItem('mockOrders', JSON.stringify(orders))
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // function of axios api to get all requests
 export async function getAllOrdersApi ( params = {} ) {
   try {
@@ -44,6 +45,8 @@ export async function getAllOrdersApi ( params = {} ) {
       data: mapped,
     }
   } catch (error) {
+
+    // Use mock json data if api or backend is not available
     if (import.meta.env.VITE_USE_MOCK_ORDERS === 'true') {
       return {
         success: true,
@@ -55,6 +58,7 @@ export async function getAllOrdersApi ( params = {} ) {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // function of axios api to get my orders
 export async function getMyOrdersApi (staffId) {
   try {
@@ -81,6 +85,8 @@ export async function getMyOrdersApi (staffId) {
       data: mapped,
     }
   } catch (error) {
+
+    // Use mock json data if api or backend is not available
     if (import.meta.env.VITE_USE_MOCK_ORDERS === 'true') {
       return {
         success: true,
@@ -92,6 +98,7 @@ export async function getMyOrdersApi (staffId) {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // function of axios api to create request
 export async function createOrderApi (data) {
   try {
@@ -128,6 +135,8 @@ export async function createOrderApi (data) {
       },
     }
   } catch (error) {
+
+    // Use mock json data if api or backend is not available
     if (import.meta.env.VITE_USE_MOCK_ORDERS === 'true') {
       const orders = getMockOrders()
 
@@ -149,6 +158,7 @@ export async function createOrderApi (data) {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // function of axios api to update request
 export async function updateOrderApi (id, data) {
   try {
@@ -186,6 +196,8 @@ export async function updateOrderApi (id, data) {
       },
     }
   } catch (error) {
+
+    // Use mock json data if api or backend is not available
     if (import.meta.env.VITE_USE_MOCK_ORDERS === 'true') {
       const orders = getMockOrders()
 
@@ -215,6 +227,7 @@ export async function updateOrderApi (id, data) {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // function of axios api to delete request
 export async function deleteOrderApi (id) {
   try {
@@ -224,6 +237,8 @@ export async function deleteOrderApi (id) {
       data: response.data,
     }
   } catch (error) {
+
+    // Use mock json data if api or backend is not available
     if (import.meta.env.VITE_USE_MOCK_ORDERS === 'true') {
       const orders = getMockOrders()
       const filteredOrders = orders.filter(

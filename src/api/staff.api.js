@@ -36,6 +36,7 @@ function saveMockStaff (staff) {
   window.localStorage.setItem('mockStaff', JSON.stringify(staff))
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // function of axios api to get data
 export async function getAllStaffApi () {
   try {
@@ -67,6 +68,7 @@ export async function getAllStaffApi () {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // function of axios api to create a staff
 export async function createStaffApi (name, email, role, password, department) {
   try {
@@ -145,6 +147,7 @@ export async function createStaffApi (name, email, role, password, department) {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // function of axios api to update data
 export async function updateStaffApi (id, name, email, role, password, department) {
   try {
@@ -204,6 +207,7 @@ export async function updateStaffApi (id, name, email, role, password, departmen
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // function of axios api to delete ONLY data in the UI
 export async function deactivateStaffApi (id) {
   try {
@@ -266,6 +270,7 @@ export async function deactivateStaffApi (id) {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Function to permanently delete staff (mock only)
 export async function deleteStaffApi (id) {
   try {

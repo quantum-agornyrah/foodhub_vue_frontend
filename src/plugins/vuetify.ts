@@ -2,6 +2,7 @@ import { createVuetify } from 'vuetify'
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
 
+// Theme configuration for adding styles to pages or the UI frameworks
 const foodhubTheme = {
   dark: false,
   colors: {
@@ -17,6 +18,7 @@ const foodhubTheme = {
   },
 }
 
+// Function to call out the theme
 export default createVuetify({
   theme: {
     defaultTheme: 'foodhubTheme',

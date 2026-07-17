@@ -2,14 +2,21 @@ import { defineStore } from 'pinia'
 import { getAuthUserApi, loginApi, registerApi } from '../api/auth.api.js'
 
 function getSavedUser () {
+  // userInfo details on session storage
   const savedUser = window.sessionStorage.getItem('userInfo')
 
+  // Check if userInfo already exists on the session storage
   if (savedUser) {
     try {
+
+      // Present or output the result in JSON format
       return JSON.parse(savedUser)
     } catch {
+
+      // Remove userInfo details when there is an uncertain error 
       window.sessionStorage.removeItem('userInfo')
 
+      // and return null values
       return {
         id: 0,
         name: '',
@@ -18,6 +25,8 @@ function getSavedUser () {
         department: '',
       }
     }
+
+    // If userInfo doenst exist on the session storage already, populate it
   } else {
     return {
       id: 0,
@@ -31,14 +40,16 @@ function getSavedUser () {
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    // Read from local storage
+    // Read the JWT token from session storage
     token: window.sessionStorage.getItem('token') || '',
 
     userInfo: getSavedUser(),
     error: null,
     isLoading: false,
 
-    // True if token exists, false otherwise
+    // True if token exists or user is logged in, false otherwise
+    // !!window.sessionStorage.getItem('token') produces a STRICT boolean value
+    // Either Falsy or Truthy depending on token availability
     isAuthenticated: !!window.sessionStorage.getItem('token'),
   }),
 
@@ -57,7 +68,10 @@ export const useAuthStore = defineStore('auth', {
       this.isLoading = true
       this.error = null
       try {
+        // 1. Call API
         const re = await loginApi(email, password)
+
+        // 2. Get and save API
         const token = re['Staff Token'] || re.token
 
         if (token) {
@@ -66,6 +80,7 @@ export const useAuthStore = defineStore('auth', {
           // State persistence
           window.sessionStorage.setItem('token', token)
 
+          // 3. Fetch User profile
           // Fetch the userinfo using the token
           const profile = re.userInfo || await getAuthUserApi()
 
@@ -79,6 +94,8 @@ export const useAuthStore = defineStore('auth', {
           }
           // Set authentication status
           this.isAuthenticated = true
+
+          // 4. Save profile to session storage
           // State persistence
           window.sessionStorage.setItem('userInfo', JSON.stringify(this.userInfo))
           return true
@@ -101,8 +118,11 @@ export const useAuthStore = defineStore('auth', {
       this.isLoading = true
       this.error = null
       try {
+        // 1. Call API
         const re = await registerApi(name, email, role, password, department)
         if (re) {
+
+          // 2. Save user Information
           const user = re.userInfo || re
           // Set the user info
           this.userInfo = {
@@ -112,6 +132,8 @@ export const useAuthStore = defineStore('auth', {
             role: user.role,
             department: user.department,
           }
+
+          // 3. Save in session storage
           // State persistence;
           window.sessionStorage.setItem('userInfo', JSON.stringify(this.userInfo))
           return true
@@ -130,11 +152,11 @@ export const useAuthStore = defineStore('auth', {
 
     // function to logout a user
     async logout () {
-      // Clear local storage
+      // 1. Clear session storage
       window.sessionStorage.removeItem('token')
       window.sessionStorage.removeItem('userInfo')
 
-      // Reset state
+      // 2. Reset state
       this.token = ''
       this.userInfo = {
         id: 0,

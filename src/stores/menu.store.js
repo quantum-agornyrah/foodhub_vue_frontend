@@ -3,13 +3,15 @@ import { createMenuApi, createBulkMenuApi, deleteMenuApi, getAllMenuItemsApi, ge
 
 export const useMenuStore = defineStore('menu', {
   state: () => ({
-    // Read from local storage
     allMenuItems: [],
+
+    // Fetch deadline from local storage
     weekDeadlines: JSON.parse(localStorage.getItem('foodhub:weekDeadlines') || '{}'),
+
     isLoading: false,
     error: null,
 
-    // WebSocket state
+    // WebSocket state connection
     socket: null,
   }),
 
@@ -18,9 +20,11 @@ export const useMenuStore = defineStore('menu', {
     deadlineByWeek: state => weekString =>
       state.weekDeadlines[weekString] || null,
 
+    // Get menu for a specific week
     menuByWeek: state => weekString =>
       state.allMenuItems.filter(item => item.weekString === weekString),
 
+    // Get menu for a specific date
     menuByDate: state => date =>
       state.allMenuItems.filter(item => item.date === date),
   },
@@ -31,8 +35,11 @@ export const useMenuStore = defineStore('menu', {
       this.isLoading = true
       this.error = null
       try {
+        // 1. Call API
         const response = await getAllMenuItemsApi(params)
         if (response.success) {
+
+          // 2. Fetch all menu items from response
           this.allMenuItems = response.data
         } else {
           this.error = response.error
@@ -53,9 +60,11 @@ export const useMenuStore = defineStore('menu', {
       this.isLoading = true
       this.error = null
       try {
+        // 1. Call API
         const response = await createMenuApi(data)
         if (response.success) {
           
+          // 2. Add menu to the allmenu list
           //Add the menu directly without calling the whole list
           this.allMenuItems.push(response.data)
           //await this.getAllMenuItems() // Pulls the updated list immediately
@@ -78,6 +87,7 @@ export const useMenuStore = defineStore('menu', {
       this.isLoading = true
       this.error = null
       try {
+        // 1. Call API
         const response = await createBulkMenuApi(items)
         if (response.success) {
           
@@ -103,10 +113,11 @@ export const useMenuStore = defineStore('menu', {
       this.isLoading = true
       this.error = null
       try {
+        // 1. Call API
         const response = await updateMenuApi(id, data)
         if (response.success) {
 
-          //Update the menu directly without calling the whole list
+          //2. Update the menu directly without calling the whole list
           const index = this.allMenuItems.findIndex(s => s.id === id)
           if (index !== -1) {
             this.allMenuItems[index] = response.data
@@ -131,10 +142,11 @@ export const useMenuStore = defineStore('menu', {
       this.isLoading = true
       this.error = null
       try {
+        // 1. Call API
         const response = await deleteMenuApi(id)
         if (response.success) {
 
-          // Remove the menu by referencing its exact id, directly without calling the whole list
+          // 2. Remove the menu by referencing its exact id, directly without calling the whole list
           this.allMenuItems = this.allMenuItems.filter(o => o.id !== id)
           //await this.getAllMenuItems() // Pulls the updated list immediately
           this.error = null
@@ -156,11 +168,14 @@ export const useMenuStore = defineStore('menu', {
       this.isLoading = true
       this.error = null
       try {
+        // 1. Call API
         const response = await setWeekDeadlineApi(weekString, isoDatetime)
         if (response.success) {
-          // Update local state
+
+          // 2. Update local state
           this.weekDeadlines[weekString] = isoDatetime
-          // Persist locally so staff see it immediately on the same browser
+
+          // 3. Persist locally so staff see it immediately on the same browser
           localStorage.setItem('foodhub:weekDeadlines', JSON.stringify(this.weekDeadlines))
           this.error = null
         } else {
@@ -181,9 +196,14 @@ export const useMenuStore = defineStore('menu', {
       this.isLoading = true
       this.error = null
       try {
+        // 1. Call API
         const response = await getWeekDeadlineApi(weekString)
         if (response.success) {
+          
+          // 2. Check if deadline is set or deadline passes
           this.weekDeadlines[weekString] = response.data && response.data.deadline ? response.data.deadline : null
+
+          // 3. Imprint deadline elements; date + time on the local storage
           localStorage.setItem('foodhub:weekDeadlines', JSON.stringify(this.weekDeadlines))
           this.error = null
         } else {
@@ -203,6 +223,7 @@ export const useMenuStore = defineStore('menu', {
     connectWebSocket (){
       if (this.socket) return
 
+      // Get the JWT token from the session storage
       const token = window.sessionStorage.getItem('token')
       if (!token) return
 
