@@ -3,17 +3,21 @@ import { createOrderApi, deleteOrderApi, getAllOrdersApi, getMyOrdersApi, update
 
 export const useOrderStore = defineStore('order', {
   state: () => ({
-    // Read from local storage
+    // All public + private orders array
     allOrders: [],
+
+    // All private orders array
     myOrders: [],
     isLoading: false,
     error: null,
   }),
 
   getters: {
+    // Get orders for a particular staff
     ordersByStaff: state => staffId =>
       state.allOrders.filter(order => String(order.staffId) === String(staffId)),
 
+    // Get orders for a given week
     ordersByWeek: state => weekString =>
       state.allOrders.filter(order => order.weekString === weekString),
 
@@ -101,11 +105,13 @@ export const useOrderStore = defineStore('order', {
         if (response.success) {
 
           //Update the order directly without calling the whole list
+          // Update in allOrders
           const index = this.allOrders.findIndex(s => s.id === id)
           if (index !== -1) {
             this.allOrders[index] = response.data
           }
 
+          // Update in myOrders
           const myIndex = this.myOrders.findIndex(s => s.id === id)
           if (myIndex !== -1) {
             this.myOrders[myIndex] = response.data

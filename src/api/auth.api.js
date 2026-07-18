@@ -19,18 +19,22 @@ function saveMockUsers (users) {
   window.localStorage.setItem('mockUsers', JSON.stringify(users))
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Helper to fetch the logged-in user profile using the JWT token
 export async function getAuthUserApi () {
   const response = await api.get('/staff/auth')
   return response.data
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // function of axios api to login a user
 export async function loginApi (email, password) {
   try {
     const response = await api.post('/staff/login', { email, password })
     return response.data
   } catch (error) {
+
+    // Use mock json data if api or backend is not available
     if (import.meta.env.VITE_USE_MOCK_AUTH === 'true') {
       const users = getMockUsers()
 
@@ -65,6 +69,7 @@ export async function loginApi (email, password) {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // function of axios api to register a user
 export async function registerApi (name, email, role, password, department) {
   try {
@@ -80,6 +85,8 @@ export async function registerApi (name, email, role, password, department) {
 
     return response.data
   } catch (error) {
+
+    // Use mock json data if api or backend is not available
     if (import.meta.env.VITE_USE_MOCK_AUTH === 'true') {
       const users = getMockUsers()
 

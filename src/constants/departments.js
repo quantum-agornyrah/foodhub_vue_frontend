@@ -2,14 +2,15 @@
 export const DEPARTMENTS = [
   'Administration',
   'HR - Human Resource',
-  'IT - Information Technology',
+  'IT - Apps',
   'Data Center',
   'Brands',
   'Accounts',
   'Project Management',
-  'Projects',
+  'Project Reporting',
   'Networking',
   'Cyber Security',
+  'Law Firm'
 ]
 
 // Get all departments with "All" option

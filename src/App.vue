@@ -10,7 +10,7 @@ const { mobile } = useDisplay()
   <v-app>
     <router-view />
 
-    <!-- Global Snackbar Host -->
+    <!-- Global Snackbar - Single notification system for entire app -->
     <v-snackbar
       :model-value="isVisible"
       :color="color"

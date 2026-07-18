@@ -2,8 +2,10 @@ import { defineStore } from 'pinia'
 
 export const useUiStore = defineStore('ui', {
   state: () => ({
+    // Shor or hide loading overlay
     globalLoading: false,
 
+    // Toast notifications
     snackbar: {
       show: false,
       message: '',
@@ -11,6 +13,7 @@ export const useUiStore = defineStore('ui', {
       timeout: 3000,
     },
 
+    // Confirmation pop-up
     confirmDialog: {
       show: false,
       title: '',
@@ -27,6 +30,7 @@ export const useUiStore = defineStore('ui', {
       this.globalLoading = value
     },
 
+    // Action to activate and SHOW toast notifications
     showSnackbar (message, color = 'success', timeout = 3000) {
       this.snackbar = {
         show: true,
@@ -36,10 +40,11 @@ export const useUiStore = defineStore('ui', {
       }
     },
 
+    // Function to disable toast notification
     hideSnackbar () {
       this.snackbar.show = false
     },
-
+    
     openConfirmDialog (options) {
       this.confirmDialog = {
         show: true,
