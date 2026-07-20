@@ -3,7 +3,7 @@ import autoTable from 'jspdf-autotable'
 
 import * as XLSX from 'xlsx'
 
-// Export orders to PDF with FoodHub branding
+// Function to export orders to PDF
 export function exportOrdersToPDF (orders, weekDates, weekRange, department, filename = 'FoodHub_OrderSummary') {
   // Create new PDF document (A4 landscape)
   const doc = new jsPDF({
@@ -59,8 +59,7 @@ export function exportOrdersToPDF (orders, weekDates, weekRange, department, fil
 
   yPosition += 8
 
-  // ===== PREPARE TABLE DATA =====
-
+  // Function to prepare table data
   function getStaffData(deptOrders){
     const staffMap = new Map()
     for (const order of deptOrders) {
@@ -254,6 +253,8 @@ export function exportOrdersToPDF (orders, weekDates, weekRange, department, fil
   //  URL.revokeObjectURL Memory Leak FIX
   setTimeout(() => URL.revokeObjectURL(pdfUrl), 1000)
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Export orders to Excel
 export function exportOrdersToExcel (orders, weekDates, filename = 'FoodHub_OrderSummary') {

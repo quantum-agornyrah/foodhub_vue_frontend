@@ -57,7 +57,7 @@ export function useOrderDraft () {
     selections.value = stored.selections ?? {}
   }
 
-  // Persist to localStorage whenever weekStart or selections change
+  // Persist or Auto-save to localStorage whenever weekStart or selections change
   watch(
     [weekStart, selections],
     () => saveToStorage({ weekStart: weekStart.value, selections: selections.value }),

@@ -1,10 +1,11 @@
 <script setup>
   import { useRouter } from 'vue-router'
-  import { useAuthStore } from '../../stores/auth.store.js'
+  import { useAuthStore } from '@/stores/auth.store.js'
 
   const authStore = useAuthStore()
   const router = useRouter()
 
+  // Function to logout a user
   function logout () {
     authStore.logout()
     router.push({ path: '/login' })
@@ -15,39 +16,31 @@
   <div>
     <v-list class="bg-transparent" density="compact" nav>
       <v-list-item
-        active-class="bg-primary-light text-primary font-weight-bold"
-        class="text-white rounded-lg mb-1"
         prepend-icon="mdi-view-dashboard-outline"
         title="Dashboard"
         to="/hr-dashboard"
-        value="dashboard"
+        active-class="bg-primary-light text-primary font-weight-bold"
       />
 
       <v-list-item
-        active-class="bg-primary-light text-primary font-weight-bold"
-        class="text-white rounded-lg mb-1"
         prepend-icon="mdi-silverware-fork-knife"
         title="Menu manager"
         to="/menu-manager"
-        value="menu manager"
+        active-class="bg-primary-light text-primary font-weight-bold"
       />
 
       <v-list-item
-        active-class="bg-primary-light text-primary font-weight-bold"
-        class="text-white rounded-lg mb-1"
         prepend-icon="mdi-clipboard-list-outline"
         title="Orders"
         to="/order-summary"
-        value="orders"
+        active-class="bg-primary-light text-primary font-weight-bold"
       />
 
       <v-list-item
-        active-class="bg-primary-light text-primary font-weight-bold"
-        class="text-white rounded-lg mb-1"
         prepend-icon="mdi-logout"
         title="Sign out"
-        value="signout"
         @click="logout"
+        active-class="bg-primary-light text-primary font-weight-bold"
       />
     </v-list>
   </div>

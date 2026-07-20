@@ -16,37 +16,44 @@
   // Drawer open/close state for mobile
   const drawer = ref(false)
 
-  // Use the connected token to validate authentication
+  // Connect websocket when shell mount i.e when user is authenticated
   onMounted(() => {
     if(authStore.isAuthenticated){
       menuStore.connectWebSocket()
     }
   })
 
-  // Diconnect token mount before connecting or after logout
+  // Diconnect when user logs out or shell unmounts
   onBeforeUnmount(() => {
     menuStore.disconnectWebSocket()
   })
 
-  // Close the navigation drawer automatically when navigation occurs
-  watch(() => route.path, () => {
-    drawer.value = false
-  })
+  // Automatically closes a mobile navigation drawer whenever the user navigates to a new page
+  watch(
+    () => route.path, 
+    () => {
+      drawer.value = false
+    }
+  )
 
-  // Read the role directly from the store, with path-based fallback for testing
+  // Role Detection Logic
   const role = computed(() => {
+    // Check if user is authenticated and get the user's role
     if (authStore.isAuthenticated && authStore.userInfo?.role) {
+
+      // Get the role as the result
       return authStore.userInfo.role
     }
-    // Fallback: Infer role based on current route path
-    const path = router.currentRoute.value.path
-    if (path.includes('/hr-') || path.includes('/menu-') || path.includes('/order-') || path.includes('/off-days')) {
+    // Fallback: Check the route path to see if a particular URL link is (hr) specific
+    // If yes, role is set as (hr)
+    const path = router.currentRoute.value
+    if (path.meta.roles?.includes('hr')) {
       return 'hr'
     }
-
     return 'staff'
   })
 
+  // Function to log out a user
   function logout () {
     authStore.logout()
     router.push({ path: '/login' })
@@ -57,7 +64,7 @@
 <template>
   <v-row class="fill-height">
 
-    <!-- NAV-BAR FOR TABLET AND DESKTOP -->
+    <!-- NAV-BAR FOR DESKTOP -->
     <v-navigation-drawer
       v-if="!mobile"
       color="#D2451E"
@@ -84,7 +91,7 @@
       <StaffNav v-else-if="role === 'staff'" />
     </v-navigation-drawer>
 
-    <!-- NAV-BAR FOR MOBILE -->
+    <!-- NAV-BAR FOR MOBILE & TABLET -->
     <v-app-bar v-if="mobile" color="#D2451E" flat height="80">
       <template #prepend>
         <v-btn
@@ -106,7 +113,7 @@
       </v-app-bar-title>
     </v-app-bar>
 
-    <!-- NAV-BAR FOR MOBILE -->
+    <!-- NAV-BAR FOR TABLET & MOBILE -->
     <v-navigation-drawer
       v-if="mobile"
       v-model="drawer"
@@ -123,7 +130,7 @@
     </v-navigation-drawer>
 
     <!-- Page content renders here -->
-    <v-main color="#white" style="min-height: 100vh;">
+    <v-main>
       <div class="pa-2">
         <slot />
       </div>
