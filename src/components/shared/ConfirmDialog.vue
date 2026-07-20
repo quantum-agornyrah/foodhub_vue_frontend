@@ -1,48 +1,71 @@
 <script setup>
 // Reusable confirmation dialog redesigned to match Add/Edit staff modals
   const props = defineProps({
+
+    // Show/Hide dialog prop
     modelValue: {
       type: Boolean,
       default: false,
     },
+
+    // Confirmation title prop
     title: {
       type: String,
       default: 'Are you sure?',
     },
+
+    // Confirmation message/Info prop
     message: {
       type: String,
       default: 'This action cannot be undone.',
     },
+
+    // Confirm button text prop
     confirmLabel: {
       type: String,
       default: 'Confirm',
     },
+
+    // Cancel button text prop
     cancelLabel: {
       type: String,
       default: 'Cancel',
     },
+
+    // Confirm button color prop
     confirmColor: {
       type: String,
       default: '#58111A',
     },
+
+    // Dialog header icon prop
     icon: {
       type: String,
       default: 'mdi-help-circle-outline',
     },
+
+    // Loading annimation prop
     loading: {
       type: Boolean,
       default: false,
     },
   })
 
+  // Even listener for dialog, confirm button and the cancel button
   const emit = defineEmits(['update:modelValue', 'confirm', 'cancel'])
 
+  // Function to execute the confirm button
   function onConfirm () {
+    // Execute the confirm button
     emit('confirm')
   }
 
+  // Function to execute the cancel button
   function onCancel () {
+    // 1. Close the dialog
     emit('update:modelValue', false)
+
+    // 2. Execute the cancel button
     emit('cancel')
   }
 </script>

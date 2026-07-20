@@ -1,11 +1,12 @@
 <script setup>
 // Presentation component for Worker Navigation list
   import { useRouter } from 'vue-router'
-  import { useAuthStore } from '../../stores/auth.store.js'
+  import { useAuthStore } from '@/stores/auth.store.js'
 
   const authStore = useAuthStore()
   const router = useRouter()
 
+  // Function to logout a user
   function logout () {
     authStore.logout()
     router.push({ path: '/login' })
@@ -16,39 +17,31 @@
   <div>
     <v-list class="bg-transparent" density="compact" nav>
       <v-list-item
-        active-class="bg-primary-light text-primary font-weight-bold"
-        class="text-white rounded-lg mb-1"
         prepend-icon="mdi-view-dashboard-outline"
         title="Dashboard"
         to="/staff-dashboard"
-        value="dashboard"
+        active-class="bg-primary-light text-primary font-weight-bold"
       />
 
       <v-list-item
-        active-class="bg-primary-light text-primary font-weight-bold"
-        class="text-white rounded-lg mb-1"
         prepend-icon="mdi-calendar-check-outline"
         title="Order this week"
         to="/weekly-overview"
-        value="order-week"
+        active-class="bg-primary-light text-primary font-weight-bold"
       />
 
       <v-list-item
-        active-class="bg-primary-light text-primary font-weight-bold"
-        class="text-white rounded-lg mb-1"
         prepend-icon="mdi-history"
         title="My history"
         to="/my-order-history"
-        value="my-history"
+        active-class="bg-primary-light text-primary font-weight-bold"
       />
 
       <v-list-item
-        active-class="bg-primary-light text-primary font-weight-bold"
-        class="text-white rounded-lg mb-1"
         prepend-icon="mdi-logout"
         title="Sign out"
-        value="signout"
         @click="logout"
+        active-class="bg-primary-light text-primary font-weight-bold"
       />
     </v-list>
   </div>
