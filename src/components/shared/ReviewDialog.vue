@@ -1,46 +1,85 @@
 <script setup>
   import { ref, watch } from 'vue'
 
-  const props = defineProps({
-    modelValue: Boolean,
-    order: Object,
-    readonly: Boolean, // If true, HR is just reading it
-    loading: Boolean
+// 1. Declare the two-way v-model binding
+// This handles the prop receiving and emitting updates automatically
+  const isVisible = defineModel({
+    type: Boolean,
+    default: false,
   })
 
-  const emit = defineEmits(['update:modelValue', 'submit-review'])
+  // 2. Define the rest of the props
+  const props = defineProps({
+
+    // Order details prop
+    order: {
+      type: Object,
+      defaul: () => null,
+    },
+    
+    // Read or Write ability prop - True for HR
+    readonly: {
+      type: Boolean,
+      default: false,
+    },
+    
+    // Loading animation prop
+    loading: {
+      type: Boolean,
+      default: false,
+    },
+  })
+
+// 3. Declare custom action emits
+// Even listener for the submit-review button
+  const emit = defineEmits(['submit-review'])
 
   const rating = ref(0)
   const comment = ref('')
 
-  watch([() => props.modelValue, () => props.order], () => {
-    if (props.modelValue && props.order) {
+  // 4. Watch for changes in reactive values, 
+  // trace and get rating and comment fro eah food item when dialog is visible and when an order is selected
+  watch([isVisible, () => props.order], () => {
+    if (isVisible.value && props.order) {
       rating.value = props.order.rating || 0
       comment.value = props.order.comment || ''
     }
   })
 
+  // Function to close dialog
   function handleClose () {
+    // 1. Clean the form
     resetForm()
-    emit('update:modelValue', false)
+
+    // 2. Disable the dialog
+    isVisible.value = false
   }
 
+  // Function to submit review
   function submit () {
-    emit('submit-review', { id: props.order.id, rating: rating.value, comment: comment.value })
+    // 1. Prevent any error incase orders turn out to be null
+    if (!props.orders) return
+
+    // 2. Execute the event 
+    emit('submit-review', { 
+      id: props.order.id, 
+      rating: rating.value, 
+      comment: comment.value 
+    })
   }
 
+  // Function to clear form inputs
   function resetForm () {
-  rating.value = 0
-  comment.value = ''
+    rating.value = 0
+    comment.value = ''
   }
 </script>
 
 <template>
   <v-dialog
     max-width="600"
-    :model-value="modelValue"
+    v-model="isVisible"
     persistent
-    @update:model-value="emit('update:modelValue', $event)"
   >
     <v-card elevation="0" style="border: 2px solid #D2451E;">
       <!-- Dialog Header -->

@@ -1,28 +1,28 @@
 <script setup>
   import { computed } from 'vue'
-  // Use your existing helper functions
   import { getWeekDates, getWeekLabel } from '@/utils/dateHelpers.js'
 
-  const props = defineProps({
-    modelValue: {
-      type: Number, // Week offset (0 = current week, -1 = last week, 1 = next week)
-      default: 0,
-    },
+// 1. Declare the two-way v-model binding
+// This handles the prop receiving and emitting updates automatically
+// Week offset (0 = current week, -1 = last week, 1 = next week)
+  const offset = defineModel({
+    type: Number,
+    default: 0,
   })
 
-  const emit = defineEmits(['update:modelValue'])
-
-  // Use your existing getWeekLabel function
+// 2. Point to the getWeekLabel function already defined and feed it with the default value
   const weekLabel = computed(() => {
-    return getWeekLabel(props.modelValue)
+    return getWeekLabel(offset.value)
   })
 
+  // Function to reduce the value of the offset by 1 -> Previous week
   function goToPreviousWeek () {
-    emit('update:modelValue', props.modelValue - 1)
+    offset.value--
   }
 
+  // Function to increase the value of the offset by 1 -> Next week
   function goToNextWeek () {
-    emit('update:modelValue', props.modelValue + 1)
+    offset.value++
   }
 </script>
 

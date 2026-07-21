@@ -10,27 +10,24 @@
   const isLoading = ref(false)
   const errorMessage = ref('')
   const isFormValid = ref(true)
-  const emailSent = ref(false) // Tracks whether the reset email was sent
+  const emailSent = ref(false)
 
   const emailRules = [
     value => !!value || 'Email is required',
     value => /.+@.+\..+/.test(value) || 'E-mail must be valid',
   ]
 
+  // Function to validate rules/form and submit input
   async function onSubmit () {
-    if (formRef.value) {
-      const { valid } = await formRef.value.validate()
-      if (!valid) {
-        errorMessage.value = 'Please enter a valid email address.'
-        return
-      }
-    }
+    
+    // 1. Validate form
+    const { valid } = await formRef.value.validate()
+    if (!valid) return
 
     isLoading.value = true
-    errorMessage.value = ''
 
     try {
-      // TODO: Replace with actual API call e.g. await authStore.forgotPassword(email.value)
+      // 2. TODO: API call e.g. await authStore.forgotPassword(email.value)
       await new Promise(resolve => setTimeout(resolve, 1500))
 
       // Show success state
@@ -53,15 +50,15 @@
       width="100%"
     >
       <!-- Logo Section -->
-      <div class="d-flex align-center justify-center mb-4">
-        <v-avatar class="mr-4" color="#F9ECEE" rounded="lg" size="40">
-          <v-icon color="#D2451E" size="24">mdi-food-fork-drink</v-icon>
+      <div class="d-flex align-center justify-center mb-6">
+        <v-avatar class="mr-4" color="#F9ECEE" rounded="lg" size="50">
+          <v-icon color="#D2451E" size="35">mdi-food-fork-drink</v-icon>
         </v-avatar>
 
-        <span class="font-weight-bold text-h6 text-grey-darken-4">FoodHub</span>
+        <span class="font-weight-bold text-title-large">FoodHub</span>
       </div>
 
-      <!-- STEP 1: Email Input Form -->
+      <!-- Email Input Form -->
       <template v-if="!emailSent">
         <div class="text-center mb-6">
           <h2 class="text-h6 font-weight-bold">Forgot Password</h2>
@@ -107,7 +104,7 @@
         </v-form>
       </template>
 
-      <!-- STEP 2: Success Confirmation -->
+      <!-- Success Confirmation -->
       <template v-else>
         <div class="text-center">
           <v-icon class="mb-4" color="#D2451E" size="64">mdi-email-check-outline</v-icon>

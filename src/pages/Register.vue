@@ -11,7 +11,7 @@
 
   const name = ref('')
   const email = ref('')
-  const role = ref('staff') // default role
+  const role = ref('staff')
   const department = ref('')
   const password = ref('')
   const confirmPassword = ref('')
@@ -66,20 +66,15 @@
     value => value === password.value || 'Passwords do not match',
   ]
 
+  // Function to validate rules/form and submit input
   async function onSubmit () {
-    if (formRef.value) {
-      const { valid } = await formRef.value.validate()
-      if (!valid) {
-        errorMessage.value = 'Please complete the form correctly.'
-        return
-      }
-    }
-
-    isLoading.value = true
-    errorMessage.value = ''
-    successMessage.value = ''
+    
+    // 1. Validate form
+    const { valid } = await formRef.value.validate()
+    if (!valid) return
 
     try {
+      // 2. Call register method from auth store
       const result = await authStore.register(
         name.value,
         email.value,
@@ -88,9 +83,11 @@
         role.value === 'staff' ? department.value : null,
       )
 
+      //3. Check if registration is executed and is ssuccessful or fails
       if (result) {
         successMessage.value = 'Registration successful! Redirecting to login...'
         setTimeout(() => {
+          // 4. Redirect to the home or login page after 2 seconds
           router.push('/')
         }, 2000)
       } else {

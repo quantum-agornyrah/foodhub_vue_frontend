@@ -73,7 +73,7 @@ export function getWeekString (date = new Date()) {
 }
 
 // Function to format a week range
-export function getWeekLabel (weekOffset = 0) {
+export function getWeekLabel (weekOffset) {
   // 1. Get the whole week; Mon to Fri
   const dates = getWeekDates(weekOffset)
 
