@@ -1,12 +1,13 @@
 <script setup>
-// Reusable confirmation dialog redesigned to match Add/Edit staff modals
-  const props = defineProps({
+// 1. Declare the two-way v-model binding
+// This handles the prop receiving and emitting updates automatically
+  const isVisible = defineModel({
+    type: Boolean,
+    default: false,
+  })
 
-    // Show/Hide dialog prop
-    modelValue: {
-      type: Boolean,
-      default: false,
-    },
+// 2. Declare remaining component props
+  const props = defineProps({
 
     // Confirmation title prop
     title: {
@@ -35,7 +36,7 @@
     // Confirm button color prop
     confirmColor: {
       type: String,
-      default: '#58111A',
+      default: '#D2451E',
     },
 
     // Dialog header icon prop
@@ -51,8 +52,9 @@
     },
   })
 
-  // Even listener for dialog, confirm button and the cancel button
-  const emit = defineEmits(['update:modelValue', 'confirm', 'cancel'])
+// 3. Declare custom action emits
+// Even listener for confirm button and the cancel button
+  const emit = defineEmits(['confirm', 'cancel'])
 
   // Function to execute the confirm button
   function onConfirm () {
@@ -63,7 +65,7 @@
   // Function to execute the cancel button
   function onCancel () {
     // 1. Close the dialog
-    emit('update:modelValue', false)
+    isVisible.value = false
 
     // 2. Execute the cancel button
     emit('cancel')
@@ -73,9 +75,8 @@
 <template>
   <v-dialog
     max-width="600"
-    :model-value="modelValue"
+    v-model="isVisible"
     persistent
-    @update:model-value="emit('update:modelValue', $event)"
   >
     <v-card elevation="0" style="border: 2px solid #D2451E;">
       <!-- Title Header Bar -->
@@ -110,7 +111,7 @@
 
       <!-- Consistent Actions Layout -->
       <v-card-actions class="pa-4 pa-sm-6 pt-0 d-flex flex-column-reverse flex-sm-row justify-end ga-3">
-        <v-spacer cladd="d-none d-sm-block" />
+        <v-spacer class="d-none d-sm-block" />
 
         <v-btn
           class="text-capitalize font-weight-bold px-sm-14 w-100 w-sm-auto"

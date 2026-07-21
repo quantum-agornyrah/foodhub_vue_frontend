@@ -91,15 +91,16 @@
   })
 
   // Watch for week changes
-  function handleWeekChange (newOffset) {
-    weekOffset.value = newOffset
-
-    // Calculate the new week's Monday
+  watch(weekOffset, (newOffset) => {
+    // Produce the 5 dates (Mon - Fri) from the getWeekDates function
     const dates = getWeekDates(newOffset)
+
+    // Get the starting monday or the first array item from the dates
     const mondayDate = getWeekString(dates[0])
 
+    // Fetch the menu items for all the starting date to Friday
     fetchWeekMenu(mondayDate)
-  }
+  })
 
   // Get the dates for the current week for display
   const weekDates = computed(() => {
@@ -219,10 +220,7 @@
         </v-col>
 
         <v-col class="d-flex justify-sm-end" cols="12" sm="6">
-          <WeekPicker
-            :model-value="weekOffset"
-            @update:model-value="handleWeekChange"
-          />
+          <WeekPicker v-model="weekOffset"/>
         </v-col>
       </v-row>
 

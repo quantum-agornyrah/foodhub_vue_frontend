@@ -71,6 +71,7 @@
     showReviewDialog.value = true
   }
 
+  // Function to execute the submit-review emit on a selected order called 'review'
   async function handleReviewSubmit (review) {
     try {
       const success = await orderStore.updateOrder(review.id, {

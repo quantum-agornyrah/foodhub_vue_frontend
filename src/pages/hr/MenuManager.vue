@@ -52,19 +52,21 @@
 
   // Fetch data on mount
   onMounted(async () => {
-    // Fetch menu for next week FIRST
-    const weekStartDate = getWeekString(getWeekDates(1)[0])
-    await fetchWeekMenu(weekStartDate)
+    let targetDate
 
-    // THEN set active day (this will override the composable's default)
+    // When HR wants to access the menu for other weeks aside the current week.
     if (route.query.date) {
-      setActiveDay(route.query.date)
+      // Polish the timezone of the date in the route path
+      targetDate = parseLocalDate(route.query.date)
     } else {
-      // Fallback to Monday of next week
-      const dates = getWeekDates(1)
-      const mondayDate = formatDate(dates[0])
-      setActiveDay(mondayDate)
+      // Fallback to Monday of weekOffset
+      const dates = getWeekDates(weekOffset.value)
+      targetDate = dates[0]
     }
+
+    const weekStartDate = getWeekString(targetDate)
+    await fetchWeekMenu(weekStartDate)
+    setActiveDay(formatDate(targetDate))
   })
 
   // Watch for route query changes
@@ -74,20 +76,19 @@
     }
   })
 
-  // Week change handler
-  function handleWeekChange (newOffset) {
-    weekOffset.value = newOffset
-
-    // Calculate the new week's Monday
+  // Watch for week changes
+  watch(weekOffset, (newOffset) => {
+    // Produce the 5 dates (Mon - Fri) from the getWeekDates function
     const dates = getWeekDates(newOffset)
+    // Get the starting monday or the first array item from the dates
     const mondayDate = getWeekString(dates[0])
 
     // Set the active day to Monday of the new week
     setActiveDay(formatDate(dates[0]))
 
-    // Fetch menu for the new week
+    // Fetch the menu items for all the starting date to Friday
     fetchWeekMenu(mondayDate)
-  }
+  })
 
   // Selected day info
   const selectedDayInfo = computed(() => {
@@ -159,7 +160,7 @@
 
   // Save food item (create or update)
   async function handleSaveFood (foodData) {
-    const dayName = new Date(activeDay.value + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' })
+    const dayName = parseLocalDate(activeDay.value).toLocaleDateString('en-US', { weekday: 'long' })
     const data = {
       ...foodData,
       day: dayName,
@@ -251,10 +252,7 @@
         </v-col>
 
         <v-col class="d-flex justify-md-end ga-3 flex-wrap" cols="12" sm="5">
-          <WeekPicker
-            :model-value="weekOffset"
-            @update:model-value="handleWeekChange"
-          />
+          <WeekPicker v-model="weekOffset"/>
         </v-col>
       </v-row>
 

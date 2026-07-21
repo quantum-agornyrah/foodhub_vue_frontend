@@ -2,7 +2,7 @@
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
   import loginBg from '@/assets/login-bg.jpg'
-  import { useAuthStore } from '../stores/auth.store.js'
+  import { useAuthStore } from '@/stores/auth.store.js'
 
   const router = useRouter()
   const authStore = useAuthStore()
@@ -17,43 +17,39 @@
   const isFormValid = ref(true)
 
   const emailRules = [
+    // Email required field check using STRICT boolean
     value => !!value || 'Email is required',
+    // Email format check
     value => /.+@.+\..+/.test(value) || 'E-mail must be valid',
   ]
 
   const passwordRules = [
+    // Password required field check using STRICT boolean
     value => !!value || 'Password is required',
+    // Email length check
     value => value.length >= 6 || 'Password must be at least 6 characters',
   ]
 
+  // Function to validate rules/form and submit input
   async function onSubmit () {
-    // Trigger Vuetify's built-in validation rules programmatically
-    if (formRef.value) {
-      const { valid } = await formRef.value.validate()
-      if (!valid) {
-        errorMessage.value = 'Please enter both email and password.'
-        return
-      }
-    }
-
-    isLoading.value = true
-    errorMessage.value = ''
+    
+    // 1. Validate form
+    const { valid } = await formRef.value.validate()
+    if (!valid) return
 
     try {
-      // Call login method from auth store
+      // 2. Call login method from auth store
       const success = await authStore.login(email.value, password.value)
 
+      // 3. Redirect based on role using getters from auth store
       if (success) {
-        // Redirect based on role using Pinia getters
         if (authStore.isHR) {
           router.push('/hr-dashboard')
-        } else if (authStore.isStaff) {
-          router.push('/staff-dashboard')
         } else {
-          router.push('/')
+          router.push('/staff-dashboard')
         }
       } else {
-        errorMessage.value = authStore.error || 'Invalid credentials. Please try again.'
+        errorMessage.value = 'Invalid credentials. Please try again.'
       }
     } catch {
       errorMessage.value = 'An error occurred connecting to the server.'
@@ -108,16 +104,16 @@
 
         <v-text-field
           v-model="password"
-          :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
           class="mb-3"
           density="comfortable"
           hide-details="auto"
           label="Password"
           prepend-inner-icon="mdi-lock-outline"
           :rules="passwordRules"
-          :type="showPassword ? 'text' : 'password'"
           variant="outlined"
           @click:append-inner="showPassword = !showPassword"
+          :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+          :type="showPassword ? 'text' : 'password'"
         />
 
         <!-- Remember me & Forgot password -->

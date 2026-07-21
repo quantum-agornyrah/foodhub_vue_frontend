@@ -1,3 +1,13 @@
+<script setup>
+  import { useRouter } from 'vue-router'
+  import loginBg from '@/assets/login-bg.jpg'
+
+  function goHome() {
+    router.push('/')
+  }
+
+</script>
+
 <template>
   <v-main class="d-flex align-center justify-center" :style="{ backgroundImage: `url(${loginBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }">
     <v-card
@@ -9,11 +19,11 @@
     >
       <!-- Icon -->
       <div class="text-center mb-4">
-        <v-icon color="#D2451E" size="64">mdi-emoticon-sad-outline</v-icon>
+        <v-icon color="#D2451E" size="80">mdi-compass-off-outline</v-icon>
       </div>
       <!-- Title -->
-      <h2 class="text-h6 font-weight-bold text-center">404</h2>
-      <h2 class="text-h6 font-weight-bold text-center mb-4 mt-n6">Page NOT FOUND</h2>
+      <h1 class="font-weight-bold text-center mb-4">404</h1>
+      <h2 class="font-weight-bold text-center mb-4 mt-n6">Page Not Found</h2>
       <!-- Back Home Button -->
       <v-btn
         block
@@ -29,9 +39,3 @@
     </v-card>
   </v-main>
 </template>
-
-<script setup>
-
-  import loginBg from '@/assets/login-bg.jpg'
-
-</script>

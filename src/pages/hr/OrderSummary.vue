@@ -1,6 +1,6 @@
 <script setup>
   import { storeToRefs } from 'pinia'
-  import { computed, onMounted, ref } from 'vue'
+  import { computed, onMounted, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import AppShell from '@/components/layout/AppShell.vue'
   import WeekOrderTable from '@/components/orders/WeekOrderTable.vue'
@@ -33,31 +33,25 @@
   const weekOffset = ref(1)
   const isLoading = ref(false)
 
-  // Fetch data on mount
-  onMounted(async () => {
-    isLoading.value = true
-    const weekStartDate = getWeekString(getWeekDates(weekOffset.value)[0])
-    
-    await Promise.all([
-      staffStore.getAllStaff(),
-      orderStore.getAllOrders({ week_string: weekStartDate, limit: 100 }),
-      menuStore.getAllMenuItems({ week_string: weekStartDate, limit: 100 }),
-    ])
-    isLoading.value = false
+  // 1. Fetch static reference data once on mount
+  onMounted(() => {
+    staffStore.getAllStaff()
   })
 
-  // Week change handler
-  async function handleWeekChange (newOffset) {
-    weekOffset.value = newOffset
+  // 2. Automatically fetch orders & menu items whenever weekOffset changes (including on page load)
+  watch(weekOffset, async (newOffset) => {
     isLoading.value = true
-
     const weekStartDate = getWeekString(getWeekDates(newOffset)[0])
-    await Promise.all([
-      orderStore.getAllOrders({ week_string: weekStartDate, limit: 100 }),
-      menuStore.getAllMenuItems({ week_string: weekStartDate, limit: 100 }),
-    ])
-    isLoading.value = false
-  }
+
+    try {
+      await Promise.all([
+        orderStore.getAllOrders({ week_string: weekStartDate}),
+        menuStore.getAllMenuItems({ week_string: weekStartDate}),
+      ])
+    } finally {
+      isLoading.value = false
+    }
+  }, { immediate: true })
 
   // Get week dates
   const weekDates = computed(() => {
@@ -232,10 +226,7 @@
             variant="outlined"
           />
 
-          <WeekPicker
-            :model-value="weekOffset"
-            @update:model-value="handleWeekChange"
-          />
+          <WeekPicker v-model="weekOffset"/>
 
           <!-- Export Format Selector + Button -->
           <v-menu>
