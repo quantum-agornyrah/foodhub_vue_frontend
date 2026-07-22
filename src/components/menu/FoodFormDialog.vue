@@ -1,37 +1,15 @@
 <script setup>
-  import { computed, ref, watch } from 'vue'
+  import { ref, watch } from 'vue'
   import { VENDORS } from '@/constants/vendors'
 
-  const props = defineProps({
-    modelValue: {
-      type: Boolean,
-      default: false,
-    },
-    foodItem: {
-      type: Object,
-      default: null,
-    },
-    loading: {
-      type: Boolean,
-      default: false,
-    },
-  })
-
-  const emit = defineEmits(['update:modelValue', 'save'])
-
+  // Image states
   const imageFile = ref(null)
-  const maxSize = 500_000  // 500 KB
+  const maxSize = 2_000_000 // 2 MB
 
-  function handleFileUpload (file) {
-    formData.value.imageFile = file  // store raw File
-    formData.value.imageUrl = URL.createObjectURL(file)  // preview
-  }
-
-  // Food types
+  // Food type states
   const foodTypes = [...VENDORS, "Other"]
-
   const otherType = ref('')
-  const showOtherInput = ref(false)
+  const isValid = ref(false)
 
   // Form data
   const formData = ref({
@@ -41,130 +19,130 @@
     type: VENDORS[0],
   })
 
-  // Form validation
-  const isValid = ref(false)
+// 1. Declare the two-way v-model binding
+// This handles the prop receiving and emitting updates automatically
+  const foodDialog = defineModel({
+    type: Boolean,
+    default: false,
+  })
+
+// 2. Declare remaining props  
+  const props = defineProps({
+
+    // Food item prop with { title, description, image, vendor_type }
+    foodItem: {
+      type: Object,
+      required: true,
+    },
+
+    // Loading annimation prop
+    loading: {
+      type: Boolean,
+      default: false,
+    },
+  })
+
+// 3. Declare custom action emits
+// Even listener for save button
+  const emit = defineEmits(['save'])
+
+// 4. Validation 
+  // Form validation for food title
   const titleRules = [
-    v => !!v || 'Title is required',
-    v => (v && v.length >= 3) || 'Title must be at least 3 characters',
+    v => !!v?.trim() || 'Title is required',
+    v => (v?.trim().length >= 3) || 'Title must be at least 3 characters',
   ]
 
-  // const descriptionRules = [
-  //   // v => !!v || 'Description is required',
-  //   v => {
-  //     if (v && v.length >= 10) return 'Description must be at least 10 characters'
-  //     return true
-  //   }
-  // ]
-
+  // Form validation for food image
   const imageRules = [
-    v => {
-      // if (!v && !formData.value.imageUrl) return 'Image is required'
-      if (v && v.size >= maxSize) return 'Image must be less than 2MB'
-      return true
-    }
+    v => !v || v.size < maxSize || 'Image must be less than 2MB',
   ]
 
+  // Form validation for food vendor - other
   const otherTypeRules = [
-    v => (formData.value.type !== 'Other' || !!v) || 'Custom vendor type is required',
-    v => (formData.value.type !== 'Other' || (v && v.trim().length >= 2)) || 'Custom vendor type must be at least 2 characters',
+    // If text-field is STRICTLY empty
+    v => !!v?.trim() || 'Custom vendor type is required',
+
+    // If text-field is less than 2 characters
+    v => (v?.trim().length >= 2) || 'Custom vendor type must be at least 2 characters',
   ]
 
-  // Dialog title
-  const dialogTitle = computed(() => {
-    return props.foodItem ? 'Edit Food Item' : 'Add Food Item'
-  })
+// 5. Watch for food item changes (when editing)
+  watch(() => props.foodItem, (newItem) => {
+    // Make sure newitem exists or its not null 
+    if (!newItem) return
 
-  // Watch for food item changes (when editing)
-  watch(() => props.foodItem, newItem => {
-    if (newItem) {
+    // Create an already input instance for vendors 
+    const isAlreadyDefined = VENDORS.includes(newItem.type)
 
-      const isPredefined = VENDORS.includes(newItem.type)
-
-      formData.value = {
-        title: newItem.title || '',
-        description: newItem.description || '',
-        imageUrl: newItem.imageUrl || '',
-        type: isPredefined ? (newItem.type || VENDORS[0]) : "Other",
-      }
-
-      otherType.value = isPredefined ? "" : (newItem.type || "")
-      showOtherInput.value = !isPredefined
-
-      // Convert base64 imageUrl back to a File object for v-file-input display
-      if (newItem.imageUrl && newItem.imageUrl.startsWith('data:')) {
-        try {
-          // 1. Split base64 metadata from the raw base64 data string
-          const parts = newItem.imageUrl.split(',')
-          
-          // 2. Extract the mime type (e.g., "image/png") using regex
-          const mimeMatch = parts[0].match(/:(.*?);/)
-          const mime = mimeMatch ? mimeMatch[1] : 'image/png'
-          
-          // 3. Decode the base64-encoded string into binary
-          const binaryStr = atob(parts[1])
-          let n = binaryStr.length
-          const u8arr = new Uint8Array(n)
-          
-          // 4. Fill the 8-bit unsigned integer array with characters
-          while (n--) {
-            u8arr[n] = binaryStr.charCodeAt(n)
-          }
-          
-          // 5. Get the file extension (e.g., "png", "jpeg")
-          const extension = mime.split('/')[1] || 'png'
-          
-          // 6. Create a brand new File object and assign it to imageFile
-          imageFile.value = new File([u8arr], `food-image.${extension}`, { type: mime })
-        } catch (error) {
-          console.error('Error converting base64 data URL to File object:', error)
-          imageFile.value = null
-        }
-      } else {
-        // Clear file input if no base64 image exists (e.g., standard placeholders)
-        imageFile.value = null
-      }
-    } else {
-      resetForm()
-    }
-  }, { immediate: true })
-
-  // Watch dialog close
-  watch(() => props.modelValue, newVal => {
-    if (!newVal) {
-      resetForm()
-    }
-  })
-
-  function resetForm () {
+    // 1. Populate form fields
     formData.value = {
-      title: '',
-      description: '',
-      imageUrl: '',
-      type: VENDORS[0],
+      title: newItem.title || '',
+      description: newItem.description || '',
+      imageUrl: newItem.imageUrl || '',
+      type: isAlreadyDefined ? newItem.type : 'Other',
     }
-    otherType.value = ''
-    showOtherInput.value = false
-    imageFile.value = null //Reset file input
-  }
 
+    // 2. Set custom vendor if 'Other' is seleceted
+    otherType.value = isAlreadyDefined ? '' : ( newItem.type || '' )
+
+    // 3. Reset the file input to empty
+    imageFile.value = null
+
+    // { immediate: true } ensures your form is properly populated with existing data the second the dialog opens, 
+    // without needing a separate onMounted hook.
+    // Run immediately when dialog fetches already prefilled data
+  }, { immediate: true }) 
+
+  // 6. Watch imageFile for changes
+  watch(imageFile, (newFile) => {
+    // Revoke/Clear any existing blob image url in the memory
+    if (formData.value.imageUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(formData.value.imageUrl)
+    }
+
+    // If image file exists, create URL from the image for preview
+    if (newFile) {
+      formData.value.imageUrl = URL.createObjectURL(newFile)
+    } else {
+      // Revert to original item image if cleared, or empty string
+      formData.value.imageUrl = props.foodItem?.imageUrl || ''
+    }
+  })
+
+  // Function to execute close
   function handleClose () {
-    emit('update:modelValue', false)
+    foodDialog.value = false
   }
 
-  function handleSave () {
-    if (isValid.value) {
-      const finalType = formData.value.type === 'Other' ? otherType.value.trim() : formData.value.type
-      emit('save', { ...formData.value, type: finalType })
-    }
+  // Function to execute save
+  function handleSave() {
+    // 1. If form input is valid after validation rules
+    if (!isValid.value) return
+
+    // 2. Assign or clean up the OTHER input value to the form
+    const finalType = formData.value.type === 'Other'
+      ? otherType.value.trim()
+      : formData.value.type
+
+    // 3. Execute the save function
+    emit('save', {
+      // Pass { title, description, imageURL}
+      ...formData.value,
+      // Pass the vendor type
+      type: finalType,
+      // Pass raw file explicitly alongside form payload
+      imageFile: imageFile.value,
+    })
   }
+
 </script>
 
 <template>
   <v-dialog
     max-width="600"
-    :model-value="modelValue"
+    v-model="foodDialog"
     persistent
-    @update:model-value="emit('update:modelValue', $event)"
   >
     <v-card elevation="0" style="border: 2px solid #D2451E;">
       <!-- Dialog Header -->
@@ -172,10 +150,10 @@
         <div class="d-flex justify-space-between align-center">
           <div class="d-flex align-center ga-3">
             <v-icon class="mr-2" size="26" color="white">
-              {{ foodItem ? 'mdi-pencil-box-outline' : 'mdi-plus-box-outline' }}
+              mdi-pencil-box-outline
             </v-icon>
             <h2 class="text-title-medium font-weight-bold text-white">
-              {{ dialogTitle }}
+              Edit Food Item
             </h2>
           </div>
           <v-btn
@@ -225,7 +203,6 @@
           <!-- Image Upload -->
           <div>
             <label class="font-weight-bold mb-2 d-block" style="color: #1E1E1E;">
-              <!-- <v-icon class="mr-2">mdi-image-outline</v-icon> -->
               Upload Food Picture
             </label>
 
@@ -234,11 +211,10 @@
               accept="image/png, image/jpeg, image/jpg, image/webp"
               density="comfortable"
               placeholder="Pick an image"
-              prepend-icon="mdi-camera"
+              prepend-inner-icon="mdi-camera"
               :rules="imageRules"
               show-size
               variant="outlined"
-              @update:model-value="handleFileUpload"
             />
           </div>
 
@@ -272,8 +248,6 @@
               />
             </div>
            </v-expand-transition>
-
-          
 
           <!-- Image Preview -->
           <div v-if="formData.imageUrl" class="mb-4">
@@ -333,7 +307,7 @@
           variant="flat"
           @click="handleSave"
         >
-          {{ foodItem ? 'Update' : 'Add' }}
+          Update
         </v-btn>
       </v-card-actions>
     </v-card>

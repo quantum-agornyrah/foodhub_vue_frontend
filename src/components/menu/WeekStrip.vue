@@ -2,48 +2,58 @@
   import { computed } from 'vue'
   import { formatDate, getWeekDates } from '@/utils/dateHelpers.js'
 
+// 1. Declare the two-way v-model binding
+// This handles the prop receiving and emitting updates automatically
+  const selectedDate = defineModel('selectedDate', {
+    type: String,
+    required: true,
+  })
+
+// 2. Declare remaining props 
   const props = defineProps({
+    // Week duration prop
     weekOffset: {
       type: Number,
       default: 0,
     },
-    selectedDate: {
-      type: String,
-      required: true,
-    },
+
+    // Offday prop
     offDays: {
       type: Array,
       default: () => [],
     },
   })
 
-  const emit = defineEmits(['update:selectedDate'])
-
+// 3. Get the whole week i.e from Mon - Fri of the particular offset 
+// using the method form the datehelper utils
   const weekDates = computed(() => {
     return getWeekDates(props.weekOffset)
   })
 
+// 4. Automaticall define tabs for eachday of the weekoffset
   const tabs = computed(() => {
-    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+    // List all days
+    const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
 
+    // Loop through each Date object in the weekDates reactive array
     return weekDates.value.map((date, index) => {
+      // Convert date to look like "2026-07-20"
       const dateString = formatDate(date)
+
+      // Extract the day value from the date i.e 20
       const day = date.getDate()
+
+      // Check if the extracted date is an offday already
       const isOffDay = props.offDays.includes(dateString)
-      const isSelected = dateString === props.selectedDate
 
       return {
         label: `${dayNames[index]} ${day}`,
         value: dateString,
         isOffDay,
-        isSelected,
       }
     })
   })
 
-  function selectDay (dateString) {
-    emit('update:selectedDate', dateString)
-  }
 </script>
 
 <template>
@@ -51,13 +61,13 @@
     <v-btn
       v-for="tab in tabs"
       :key="tab.value"
-      class="text-capitalize font-weight-bold px-6"
+      class="text-capitalize font-weight-bold px-5"
       :class="{ 'text-decoration-line-through': tab.isOffDay }"
-      :color="tab.isSelected ? '#D2451E' : undefined"
+      :color="selectedDate === tab.value ? '#D2451E' : '#1E1E1E'"
       rounded="lg"
-      :style="tab.isSelected ? {} : { borderColor: '#D2451E', color: '#1E1E1E' }"
-      :variant="tab.isSelected ? 'flat' : 'outlined'"
-      @click="selectDay(tab.value)"
+      :style="selectedDate === tab.value ? {} : { borderColor: '#D2451E' }"
+      :variant="selectedDate === tab.value ? 'flat' : 'outlined'"
+      @click="selectedDate = tab.value"
     >
       {{ tab.label }}
     </v-btn>

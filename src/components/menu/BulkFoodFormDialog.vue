@@ -3,36 +3,60 @@
   import { computed, ref, watch } from 'vue'
   import { VENDORS } from '@/constants/vendors'
 
+  const { mobile } = useDisplay()
+
+  // Define rows for array of food item objects
+  const rows = ref([])
+  const formRef = ref(null)
+
+  // Image size
+  const maxSize = 2_000_000 // 2 MB
+
+  // Food type state
+  const vendorOptions = [...VENDORS, 'Other']
+
+// 1. Declare the two-way v-model binding
+// This handles the prop receiving and emitting updates automatically
+  const bulkDialog = defineModel({
+    type: Boolean,
+    default: false,
+  })
+
+// 2. Declare remaining props  
   const props = defineProps({
-    modelValue: {
-      type: Boolean,
-      default: false,
-    },
+    // Loading annimation prop
     loading: {
       type: Boolean,
       default: false,
     },
   })
 
-  const emit = defineEmits(['update:modelValue', 'save'])
+// 3. Declare custom action emits
+// Even listener for save button  
+  const emit = defineEmits(['save'])
 
-  const rows = ref([])
-
-  const vendorOptions = [...VENDORS, 'Other']
-  const { mobile } = useDisplay()
-
-  // Form validation
+// 4. Validation 
+  // Form validation for food title
   const titleRules = [
-    v => !!v || 'Title is required',
-    v => (v && v.length >= 3) || 'Title must be at least 3 characters',
+    v => !!v?.trim() || 'Title is required',
+    v => (v?.trim().length >= 3) || 'Title must be at least 3 characters',
   ]
 
+  // Form validation for food vendor - other
   const vendorRule = [
-    v => !!v || 'Vendor Name is required',
-    v => (v && v.length >= 2) || 'Vendor name must be at least 2 characters',
+    // If text-field is STRICTLY empty
+    v => !!v?.trim() || 'Custom vendor type is required',
+
+    // If text-field is less than 2 characters
+    v => (v?.trim().length >= 2) || 'Custom vendor type must be at least 2 characters',
   ]
 
-  // Create a new item section with parameters
+  // Form validation for food image
+  const imageRules = [
+    v => !v || v.size < maxSize || 'Image must be less than 2MB',
+  ]
+
+  // Fuction to create a new item section with parameters
   function createEmptyRow (){
     return {
         title: '',
@@ -40,95 +64,79 @@
         type: VENDORS[0],
         otherType: '',
         imageFile: null,
-        imageUrl: '',
     }
   }
 
+  // Function to reset rows
   function resetRows () {
     rows.value = [createEmptyRow()]
   }
 
-  // Add a new item section with parameters already in the function above
+  // Function to add a new item section/row
   function addRow () {
     rows.value.push(createEmptyRow())
   }
 
-  // Delete an item section
+  // Function to delete an item section/row
   function removeRow (index) {
+    // Clear fields when only one item exists
     if (rows.value.length === 1) {
       resetRows()
       return
     }
-
     // A method to remove one item at a time starting from the active item section
     rows.value.splice(index, 1)
   }
 
+  // Function to close dialog
   function closeDialog () {
-    emit('update:modelValue', false)
+    bulkDialog.value = false
   }
 
-  // Function to allow file upload for each item section and image upload input individually
-  function handleRowFileUpload (index, file) {
-    if(file){
-        // For example row.value[0].imageUrl -> First row item section image input
-        // Populate with image url extracted from the image uploaded
-        rows.value[index].imageUrl = URL.createObjectURL(file)
-    } else{
-        rows.value[index].imageUrl = ''
-    }
-  }
-
-  // Function to polish inputs and provide necessary logic
-  function normalizeRow (row) {
+  // Function to polish inputs and assign values.
+  function polishRowInputs (row) {
     return {
-      title: row.title.trim(),
+      title: row.title?.trim(),
       description: row.description?.trim() || '',
       type: row.type === 'Other' ? row.otherType.trim() : row.type,
       imageFile: row.imageFile,
-      imageUrl: row.imageUrl,
       status: null,
     }
   }
 
-  // Reactive check of row inputs
+  // For every row, align/map its inputs with the polishrowinputs function
   const normalizedRows = computed(() => {
-    return rows.value
-      .map(row => normalizeRow(row))
-      .filter(row => row.title || row.description || row.type)
+    return rows.value.map(row => polishRowInputs(row))
   })
 
-  // Function to validate inputs; more like input rules
-  const hasValidRows = computed(() => {
-    if (normalizedRows.value.length === 0) return false
+// 5. Function to validate inputs; more like input rules
+  async function saveRows() {
+    // 1. If form input is valid after validation rules
+    if (!formRef.value) return
 
-    return rows.value.every(row => {
-      const titleIsValid = row.title.trim().length >= 3
-      const typeIsValid = row.type !== 'Other' || row.otherType.trim().length >= 2
+    // 2. Validate all inputs using their rules
+    const { valid } = await formRef.value.validate()
 
-      return titleIsValid && typeIsValid
-    })
-  })
+    // 3. Prevent save if any row fails validation or if no valid rows exist
+    if (!valid || normalizedRows.value.length === 0) return
 
-  function saveRows () {
-    if (!hasValidRows.value) return
     emit('save', normalizedRows.value)
   }
 
   // Watch for food item inputs when dialog opens
-  watch(() => props.modelValue, isOpen => {
+  watch(bulkDialog, (isOpen) => {
     if (isOpen) {
       resetRows()
     }
   }, { immediate: true })
+
 </script>
 
 <template>
   <v-dialog
     max-width="600"
-    :model-value="modelValue"
+    v-model="bulkDialog"
     persistent
-    @update:model-value="emit('update:modelValue', $event)"
   >
     <v-card elevation="0" style="border: 2px solid #D2451E;">
       <v-card-title class="px-8" style="background-color: #D2451E;">
@@ -150,7 +158,7 @@
       </v-card-title>
 
       <v-card-text class="px-8 pt-8">
-        <v-form>
+        <v-form ref="formRef">
           <div class="d-flex flex-column ga-4">
             <v-card
               v-for="(row, index) in rows"
@@ -209,8 +217,8 @@
                     placeholder="Pick an image"
                     prepend-icon="mdi-camera"
                     show-size
+                    :rules="imageRules"
                     variant="outlined"
-                    @update:model-value="file => handleRowFileUpload(index, file)"
                   />
                 </v-col>
 
@@ -268,7 +276,7 @@
         <v-btn
           class="text-capitalize font-weight-bold px-sm-10 w-100 w-sm-auto ml-0 ml-sm-2"
           color="#D2451E"
-          :disabled="!hasValidRows || loading"
+          :disabled="loading"
           :loading="loading"
           variant="flat"
           @click="saveRows"
