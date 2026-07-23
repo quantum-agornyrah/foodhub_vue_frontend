@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 
 export const useUiStore = defineStore('ui', {
   state: () => ({
-    // Shor or hide loading overlay
+    // Show or hide loading overlay
     globalLoading: false,
 
     // Toast notifications

@@ -2,104 +2,116 @@
   import { computed } from 'vue'
   import FoodItemChip from './FoodItemChip.vue'
 
+// 1. Prop Definition
   const props = defineProps({
+
+    // Day prop e.g. "Mon", "Tue"
     day: {
       type: String,
-      required: true, // e.g., "Mon", "Tue"
+      required: true,
     },
+
+    // Date prop e.g. "Jun 9"
     date: {
       type: String,
-      required: true, // e.g., "Jun 9"
+      required: true,
     },
+
+    // Date ISO format prop e.g. "2026-06-09"
     dateString: {
       type: String,
-      required: true, // e.g., "2026-06-09"
+      required: true,
     },
+
+    // Array of food items { id, name, description } for THAT day prop
     items: {
       type: Array,
-      default: () => [], // Array of food items { id, name, description }
+      default: () => [],
     },
+
+    // Number of staff orders prop
     orderedCount: {
       type: Number,
       default: 0,
     },
+
+    // Number of staff prop
     totalStaff: {
       type: Number,
       default: 0,
     },
+
+    // Status of day prop
     status: {
       type: String,
-      default: 'open', // 'open', 'off', 'holiday'
+      default: 'open',
       validator: value => ['open', 'off_day', 'holiday', 'deadline_passed', 'no-items'].includes(value),
     },
+
+    // Prop to enable and disable edits
+    // True for HR users
     canEdit: {
       type: Boolean,
-      default: false, // True for HR users
+      default: false,
     },
   })
 
+// 2. Declare custom action emits
+// Even listener for confirm button and the cancel button
   const emit = defineEmits(['add-item', 'edit-item', 'delete-item'])
 
-  // Computed properties
+// 3. Define Computed properties for offday and no items statuses
   const isOffDay = computed(() => props.status === 'off_day' || props.status === 'holiday')
-
   const hasItems = computed(() => props.items && props.items.length > 0)
 
-  const cardBorderColor = computed(() => {
-    if (isOffDay.value) return '#D2451E'
-    if (!hasItems.value) return '#D2451E'
-    if (props.orderedCount > 0) return '#D2451E'
-    return '#BDBDBD'
-  })
+// 4. Define a general style for food item cards  
+  const cardStyles = computed(() => ({
+    // General minimum height for card when no food items exist
+    minHeight: '260px',
 
-  const cardBackgroundColor = computed(() => {
-    if (isOffDay.value) return '#D2451E'
-    if (!hasItems.value) return '#F5F5F5'
-    return 'white'
-  })
+    // Border color reference
+    borderColor: '#D2451E',
 
-  // Functions
+    // Border style reference
+    borderStyle: !hasItems.value && !isOffDay.value ? 'dashed' : 'solid'
+  }))
+
+  // Function to execute the add-item button
   function handleAddItem () {
-    emit('add-item', { day: props.day, date: props.date, dateString: props.dateString })
+    emit('add-item', { 
+      day: props.day, 
+      date: props.date, 
+      dateString: props.dateString 
+    })
   }
 </script>
 
 <template>
   <v-card
-    :border="true"
-    :class="[
-      'pa-5',
-      { 'dashed-border': !hasItems && !isOffDay }
-    ]"
-    :color="cardBackgroundColor"
+    border
     elevation="0"
-    style="min-height: 280px;"
-    :style="{
-      borderColor: cardBorderColor,
-      borderStyle: !hasItems && !isOffDay ? 'dashed !important' : 'solid !important'
-    }"
+    class="pa-5"
+    :style="cardStyles"
     :variant="isOffDay ? 'outlined' : 'flat'"
   >
     <!-- Day Header -->
     <div class="mb-4">
-      <div class="font-weight-bold" style="font-size: 20px;">
+      <div class="font-weight-bold text-black" style="font-size: 20px;">
         {{ day }}
       </div>
 
-      <div class="text-caption">
+      <div class="text-caption text-black">
         {{ date }}
       </div>
     </div>
 
     <!-- Off Day State -->
     <div v-if="isOffDay" class="text-center py-6">
-      <v-avatar class="mb-2" color="red-lighten-5" size="48">
-        <v-icon color="red-darken-1" size="24">
-          mdi-beach
-        </v-icon>
-      </v-avatar>
+      <v-icon color="#D2451E" size="50" class="mb-2 mt-n4">
+        mdi-calendar-remove
+      </v-icon>
 
-      <div class="font-weight-bold" style="font-size: 20px;">
+      <div class="font-weight-bold text-black" style="font-size: 20px;">
         Off day
       </div>
 
@@ -115,12 +127,11 @@
       </div>
     </div>
 
-    <!-- Food Items List (Compact with images) -->
-    <div v-else class="d-flex flex-column ga-2 mb-4" style="max-height: 240px; overflow-y: auto;">
+    <!-- Food Items List with images -->
+    <div v-else class="d-flex flex-column ga-2 mb-4" style="max-height: 240px; overflow-y: auto">
       <FoodItemChip
         v-for="item in items"
         :key="item.id"
-        :compact="true"
         :description="item.description"
         :image-url="item.imageUrl"
         :title="item.title"
@@ -143,7 +154,6 @@
       class="rounded-lg"
       color="#D2451E"
       prepend-icon="mdi-plus"
-      style="color: white !important;"
       variant="flat"
       @click="handleAddItem"
     >

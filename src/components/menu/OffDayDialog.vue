@@ -1,38 +1,12 @@
 <script setup>
-  import { computed, ref, watch } from 'vue'
+  import { computed, ref } from 'vue'
   import { useSnackbar } from '@/composables/useSnackbar.js'
   import { useWeekMenu } from '@/composables/useWeekMenu.js'
-  import { DAY_STATUS } from '@/constants/dayStatus.js'
   import { getWeekString, parseLocalDate } from '@/utils/dateHelpers.js'
 
-  const props = defineProps({
-    modelValue: {
-      type: Boolean,
-      default: false,
-    },
-    selectedDate: {
-      type: String,
-      required: true,
-    },
-  })
-
-  const emit = defineEmits(['update:modelValue'])
-
+  // Get methods from helpers and composables
   const { success: snackSuccess, error: snackError } = useSnackbar()
-  const { deleteMenu, createMenu, fetchWeekMenu, activeDayMenu } = useWeekMenu()
-
-  // Format selected date to avoid timezone issues
-  const formattedSelectedDate = computed(() => {
-    if (!props.selectedDate) return ''
-
-    const date = parseLocalDate(props.selectedDate)
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  })
+  const { deleteMenu, createMenu, activeDayMenu } = useWeekMenu()
 
   // Form data
   const offDayType = ref('off_day')
@@ -45,59 +19,102 @@
     { title: 'Public Holiday', value: 'holiday', icon: 'mdi-calendar-star' },
   ]
 
-  // Watch dialog close
-  watch(() => props.modelValue, newVal => {
-    if (!newVal) {
-      resetForm()
-    }
+// 1. Declare the two-way v-model binding
+// This handles the prop receiving and emitting updates automatically
+  const offDayDialog = defineModel({
+    type: Boolean,
+    default: false,
   })
 
+// 2. Declare remaining props 
+  const props = defineProps({
+    // Selected date for offday prop
+    selectedDate: {
+      type: String,
+      required: true,
+    },
+  })
+
+// 3. Parse selected date for offday to avoid timezone issues
+  const parsedDate = computed(() => {
+    // If date is not selected
+    if (!props.selectedDate) return null
+
+    // If a particular date is selected
+    // Define the date and parse it to get the correct timezone of that particular date
+    return parseLocalDate(props.selectedDate)
+  })
+
+// 4. Format the parsed date to look like = Monday, March 2, 2026
+  const formattedSelectedDate = computed(() => {
+    // If date is not selected
+    if (!parsedDate.value) return ''
+
+    // If a particular date is selected
+    return parsedDate.value.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    })
+  })
+
+  // Function to close dialog
+  function handleClose () {
+    // 1. Clear form
+    resetForm ()
+
+    // 2. Disable dialog
+    offDayDialog.value = false
+  }
+
+  // Function to clear form
   function resetForm () {
     offDayType.value = 'off_day'
     reason.value = ''
   }
 
-  function handleClose () {
-    emit('update:modelValue', false)
-  }
-
+// 4. Function to execute mark as offday or submit offday
   async function handleMarkOffDay () {
+    // Return error notification when no date is selcted
     if (!props.selectedDate) {
       snackError('No date selected')
       return
     }
 
+    // Enable the loading spin when a date is selected
     isLoading.value = true
 
     try {
-      // Delete all menu items for this day
-      const itemsToDelete = activeDayMenu.value
-
-      for (const item of itemsToDelete) {
-        await deleteMenu(item.id)
+      // Delete existing menu items in the selected dateconcurrently
+      const itemsToDelete = activeDayMenu.value || []
+        if (itemsToDelete.length > 0) {
+          await Promise.all(itemsToDelete.map((item) => deleteMenu(item.id)))
       }
 
-      // Create a special "off day" marker item
-      // You might want to adjust this based on your backend structure
+      // Create a special "off day" marker item to fit the backend database model
       const offDayData = {
         title: offDayType.value === 'holiday' ? 'Public Holiday' : 'Off Day',
         description: reason.value || 'This day is marked as off',
-        day: new Date(props.selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' }),
+        day: parsedDate.value.toLocaleDateString('en-US', { weekday: 'long' }),
         date: props.selectedDate,
-        weekString: getWeekString(parseLocalDate(props.selectedDate)),
+        weekString: getWeekString(parsedDate.value),
         type: 'Off Day',
         imageUrl: '',
         status: offDayType.value,
       }
 
-      // Note: You may need to adjust your backend to handle "off day" status
-      // For now, this creates a marker item
+      // Create the marker item by executing the createmenu API call
       await createMenu(offDayData)
 
+      // Toast notification after success
       snackSuccess('Day marked as off successfully')
+
+      // Close dialog
       handleClose()
     } catch (error) {
       console.error('Error marking off day:', error)
+      // Toast notification after error
       snackError('Failed to mark day as off')
     } finally {
       isLoading.value = false
@@ -108,9 +125,8 @@
 <template>
   <v-dialog
     max-width="600"
-    :model-value="modelValue"
+    v-model="offDayDialog"
     persistent
-    @update:model-value="emit('update:modelValue', $event)"
   >
     <v-card elevation="0" style="border: 2px solid #D2451E;">
       <!-- Dialog Header -->
