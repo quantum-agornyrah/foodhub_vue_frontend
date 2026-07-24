@@ -50,7 +50,6 @@
   const isOffDay = computed(() => props.status === DAY_STATUS.OFF_DAY || props.status === DAY_STATUS.HOLIDAY)
   const isDeadlinePassed = computed(() => props.status === DAY_STATUS.DEADLINE_PASSED)
   const isDisabled = computed(() => isOffDay.value || isDeadlinePassed.value)
-
   const hasItems = computed(() => props.items && props.items.length > 0)
 
 // 4. Define a general style for food item cards  
@@ -130,7 +129,7 @@
         v-for="item in items"
         :key="item.id"
         class="pa-3 cursor-pointer"
-        :disabled="isDeadlinePassed"
+        :disabled="isDeadlinePassed || status === 'submitted'"
         :style="{
           border: '1.5px solid',
           borderColor: isSelected(item.id) ? '#D2451E' : '#BDBDBD',

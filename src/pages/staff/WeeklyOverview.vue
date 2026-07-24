@@ -27,7 +27,7 @@
     isSubmittingAll,
     initDraft,
     selectItem,
-    submitDraft,
+    submitOrder,
     saveDraft,
   } = useOrderDraft()
 
@@ -159,7 +159,7 @@
       const label = parsedDate.toLocaleDateString('en-US', options)
 
       // Lock the card ONLY if the deadline has actually passed
-      const status = (isWeekDeadlinePassed.value && d.status === 'open') ? 'deadline_passed' : d.status
+      const status = ((isWeekDeadlinePassed.value || isCurrentWeekSubmitted.value) && d.status === 'open') ? 'deadline_passed' : d.status
 
       return {
         date: d.date,
@@ -197,8 +197,8 @@
 
   // Action handlers
   async function handleSubmit () {
-    await submitDraft()
-    router.push('/my-order-history')
+    await submitOrder()
+    // router.push('/my-order-history')
   }
 
   async function handleSaveDraft () {
@@ -263,15 +263,15 @@
           </v-col>
 
           <v-col class="d-flex flex-column ga-3 justify-sm-end align-end" cols="12" sm="6">
-            <v-chip
+            <v-card
               v-if="isCurrentWeekSubmitted"
-              class="font-weight-bold px-4 py-5 text-white animate-pulse"
+              class="font-weight-bold px-6 py-3 text-white"
               color="success"
               variant="flat"
             >
               <v-icon class="mr-2" left>mdi-check-circle</v-icon>
               Order Submitted
-            </v-chip>
+            </v-card>
 
             <v-card
               v-if="deadlineIso && !isWeekDeadlinePassed && !isCurrentWeekSubmitted"
@@ -291,24 +291,24 @@
               </div>
             </v-card>
 
-            <v-chip
+            <v-card
               v-else-if="deadlineIso && isWeekDeadlinePassed"
-              class="font-weight-bold px-4 py-5"
+              class="font-weight-bold px-6 py-3"
               color="#D2451E"
               variant="flat"
             >
               <v-icon class="mr-2" left>mdi-alert-circle</v-icon>
               Deadline Passed
-            </v-chip>
+            </v-card>
 
-            <v-chip
+            <v-card
               v-else-if="!deadlineIso"
-              class="font-weight-bold px-4 py-5"
-              color="grey"
+              class="font-weight-bold px-4 py-3"
+              color="#D2451E"
               variant="flat"
             >
               No deadline set
-            </v-chip>
+            </v-card>
           </v-col>
         </v-row>
 
@@ -337,13 +337,11 @@
               @select="handleSelect"
             />
           </v-col>
-        </v-row>
 
-        <!-- Summary Section -->
-        <v-row>
           <v-col class="mr-auto" cols="12" md="4" sm="6">
             <WeekSelectionSummary
               :is-deadline-passed="isWeekDeadlinePassed"
+              :is-submitted="isCurrentWeekSubmitted"
               :is-saving-draft="isSavingDraft"
               :is-submitting="isSubmitting"
               :is-submitting-all="isSubmittingAll"
@@ -354,6 +352,7 @@
               @submit="handleSubmit"
             />
           </v-col>
+
         </v-row>
       </div>
     </div>

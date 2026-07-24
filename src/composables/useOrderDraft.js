@@ -186,8 +186,10 @@ export function useOrderDraft () {
       }
 
       // Run all functions related with accessing the promises array concurrently
+      // and return false if any other function fails
       if (promises.length > 0) {
-        await Promise.all(promises)
+        const results =await Promise.all(promises)
+        if (results.some(res => res === false)) return false
       }
 
       // Wait here until all the last function is finished
@@ -206,7 +208,7 @@ export function useOrderDraft () {
 
   // Function to submit the draft as a final order (ORDER_STATUS.SUBMITTED).
   // Clears the draft on success especially after deadline has passed
-  async function submitDraft () {
+  async function submitOrder () {
 
     // 1. Check the logic in the persistDraft
     isSubmittingAll.value = true
@@ -216,7 +218,7 @@ export function useOrderDraft () {
     // 2. Toast notification if order is submitted successfully
     if (ok) {
       snackSuccess('Your order has been submitted.')
-      clearDraft()
+      localStorage.removeItem(STORAGE_KEY) 
       return true
     }
 
@@ -266,7 +268,7 @@ export function useOrderDraft () {
     selectItem,
     clearDay,
     clearDraft,
-    submitDraft,
+    submitOrder,
     saveDraft,
   }
 }
