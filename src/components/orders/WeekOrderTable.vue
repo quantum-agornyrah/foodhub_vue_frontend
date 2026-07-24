@@ -2,32 +2,41 @@
   import { computed, ref } from 'vue'
   import ReviewDialog from '@/components/shared/ReviewDialog.vue'
 
+  // Search functionality
+  const search = ref('')
+  const showReviewDialog = ref(false)
+  const selectedOrderToReview = ref(null)
+
+// 1. Props Definition
   const props = defineProps({
+    // Orders props
     orders: {
       type: Array,
       default: () => [],
     },
+
+    // Dates for which food was chosen prop
     weekDates: {
       type: Array,
       default: () => [],
     },
   })
 
-  // Search functionality
-  const search = ref('')
-  const showReviewDialog = ref(false)
-  const selectedOrderToReview = ref(null)
-
+// 2. Function to enable review dialog on a paticular food order
   function openReview (order) {
-    if (!order || !order.rating) return // Only open if review exists
+    // If no order exists(offDay) or nor rating exists on an order
+    if (!order || !order.rating) return
+
+    // Mark the order that exists as active and open the dialog on that particular order
     selectedOrderToReview.value = order
     showReviewDialog.value = true
   }
 
-  // Day names for column headers
+// 3. Define the table elements
+  // Define day names for table column headers
   const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 
-  // DataTable headers
+  // Define other table headers
   const headers = computed(() => {
     return [
       {
@@ -54,35 +63,51 @@
     ]
   })
 
-  // Transform orders into DataTable format
+// 4. Define the table data with the props
   const tableData = computed(() => {
-    const staffMap = new Map()
 
+    // Create a unique group to hold unique staff and orders
+    const staffGroup = new Map()
+    const ordersGroup = new Map()
+
+    // Loop through each order object inside the props.orders array.
     for (const order of props.orders) {
-      if (!staffMap.has(order.staffId)) {
-        staffMap.set(order.staffId, {
+
+      // Check if this staffId is already stored in the staffGroup map
+      if (!staffGroup.has(order.staffId)) {
+
+        // If NOT, add that particular order object to the staff group 
+        // with staff-d as the unique id
+        staffGroup.set(order.staffId, {
           id: order.staffId,
           name: order.staffName || 'Unknown',
           department: order.department || 'N/A',
         })
       }
+
+      // Assign a new index value for orders to aid easy lookup
+      const orderGroupId = `${order.staffId}_${order.date}`
+      ordersGroup.set(orderGroupId, order)
     }
 
-    // Convert to array with day columns
-    return Array.from(staffMap.values()).map(staff => {
+    // Convert the mapped object or group back into an array
+    // and then loop through each staff member to 
+    // format a single table row (row) for them.
+    return Array.from(staffGroup.values()).map(staff => {
       const row = {
         id: staff.id,
         name: staff.name,
         department: staff.department,
-        initials: staff.initials,
       }
 
-      // Add columns for each day
-      for (const [index, date] of props.weekDates.entries()) {
-        // Store the full order object instead of just the title
-        const orderForDate = props.orders.find(o => o.staffId === staff.id && o.date === date)
-        row[`day_${index}`] = orderForDate || '-'
-      }
+      // Attach unique staff order using the ordergroupID per date index
+      props.weekDates.forEach((date, index) => {
+        // Define the unique id again for easy loop using both staffId and date
+        const orderGroupId = `${staff.id}_${date}`
+
+        // For each day, assign the order by staff correctly
+        row[`day_${index}`] = ordersGroup.get(orderGroupId) || '-'
+      })
 
       return row
     })
@@ -121,7 +146,7 @@
       :search="search"
     >
       <!-- Staff Name Column -->
-      <template #item.name="{ item }">
+      <template v-slot:item.name="{ item }">
         <div class="d-flex align-center ga-3 py-2">
           <span class="font-weight-bold" style="color: #1E1E1E;">
             {{ item.name }}
@@ -130,7 +155,7 @@
       </template>
 
       <!-- Department Column -->
-      <template #item.department="{ item }">
+      <template v-slot:item.department="{ item }">
         <v-chip
           color="#FFF3E0"
           size="small"
@@ -145,7 +170,7 @@
       <template
         v-for="(date, index) in weekDates"
         :key="`day_${index}`"
-        #[`item.day_${index}`]="{ item }"
+        v-slot:[`item.day_${index}`]="{ item }"
       >
         <div class="text-body-2 d-flex align-center justify-center" style="color: #1E1E1E;">
           <!-- Check if it's an order object or just '-' -->
@@ -170,9 +195,11 @@
         </div>
       </template>
 
-      <!-- Empty State -->
-      <template #no-data>
-        <div class="text-center py-12">
+      <!-- Single Combined Empty & Search State -->
+      <template v-slot:no-data>
+
+        <!-- 1. Empty State -->
+        <div v-if="!search" class="text-center py-12">
           <v-icon color="#1E1E1E" size="64">
             mdi-clipboard-text-off-outline
           </v-icon>
@@ -181,16 +208,14 @@
             No orders for this week
           </div>
         </div>
-      </template>
 
-      <!-- No Results State -->
-      <template #no-results>
-        <div class="text-center py-8">
-          <v-icon color="#1E1E1E" size="48">
+        <!-- 2. Search Fallback -->
+        <div v-else class="text-center py-8">
+          <v-icon color="#1E1E1E" size="64">
             mdi-magnify
           </v-icon>
 
-          <div class="font-weight-medium mt-2" style="font-size: 20px;">
+          <div class="font-weight-medium mt-4" style="font-size: 20px;">
             No staff members found for "{{ search }}"
           </div>
         </div>
@@ -207,7 +232,6 @@
 </template>
 
 <style scoped>
-/* Custom table styling */
 :deep(.v-data-table) {
   border-radius: 0;
 }

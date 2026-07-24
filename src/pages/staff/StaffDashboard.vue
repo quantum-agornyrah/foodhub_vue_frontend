@@ -208,7 +208,7 @@
     }).sort((a, b) => b.weekStart.localeCompare(a.weekStart)) // Newest first
   })
 
-  //Function to only show the last 3 weeks
+  // Function to only show the last 3 weeks
   const recentPreviousWeeks = computed(() => {
     return previousWeeks.value.slice(0, 3)
   })

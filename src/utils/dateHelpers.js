@@ -90,6 +90,28 @@ export function getWeekLabel (weekOffset) {
   return `${startStr} - ${endStr}, ${year}`
 }
 
+// Function to return 5 Mon-Fri date strings starting from a Monday date string
+export function getWeekDatesFromMonday (mondayString) {
+  // Get the monday date string
+  const monday = parseLocalDate(mondayString)
+
+  // Create an array of dates
+  const dates = []
+
+  // Loop through and add 4 more dates to the dates array
+  for (let i = 0; i < 5; i++) {
+    // Point to the monday date from the list of current week dates
+    const d = new Date(monday)
+
+    // Continue moving to the next dates
+    d.setDate(monday.getDate() + i)
+
+    // Add dates to the dates array in a suitable format
+    dates.push(formatDate(d))
+  }
+  return dates
+}
+
 // Function to check if a YYYY-MM-DD date string represents a day prior to today
 export function isPastDate (dateString) {
   // 1. Get today's date

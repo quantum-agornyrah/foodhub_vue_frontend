@@ -1,45 +1,39 @@
 <script setup>
   import { computed } from 'vue'
 
+// 1. Props Definition
   const props = defineProps({
+    // Food title prop
     title: {
       type: String,
       required: true,
     },
+
+    // Food description prop
     subtitle: {
       type: String,
       default: '',
     },
+
+    // Food status prop { open, off_day, holiday, deadline_passed }
     status: {
       type: String,
       default: 'submitted',
     },
+
+    // Route prop
     to: {
       type: String,
       default: '/my-order-history',
     },
   })
 
-  const badgeDetails = computed(() => {
-    if (props.status === 'in_progress' || props.status === 'draft') {
-      return {
-        text: 'In progress',
-        color: '#FFF3E0',
-        textColor: '#EF6C00',
-      }
-    }
-    return {
-      text: 'Submitted',
-      color: '#E8F5E9',
-      textColor: '#2E7D32',
-    }
-  })
 </script>
 
 <template>
   <v-card
-    class="pa-5 mb-3 rounded-lg d-flex align-center justify-space-between cursor-pointer"
-    style="border: 1px solid #BDBDBD;"
+    class="pa-5 mb-3 d-flex align-center justify-space-between cursor-pointer"
+    style="border: 1px solid #D2451E;"
     :to="to"
     variant="flat"
   >
@@ -53,17 +47,6 @@
         {{ subtitle }}
       </div>
     </div>
-
-    <!-- Right Section -->
-    <v-chip
-      class="font-weight-bold"
-      :color="badgeDetails.color"
-      size="small"
-      :text-color="badgeDetails.textColor"
-      variant="flat"
-    >
-      {{ badgeDetails.text }}
-    </v-chip>
   </v-card>
 </template>
 

@@ -232,7 +232,7 @@
           <v-menu>
             <template #activator="{ props }">
               <v-btn
-                class="text-capitalize font-weight-bold px-13 py-6"
+                class="text-capitalize font-weight-bold px-10 py-6"
                 color="#D2451E"
                 variant="flat"
                 v-bind="props"

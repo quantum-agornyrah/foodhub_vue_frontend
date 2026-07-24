@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useSnackbar } from '@/composables/useSnackbar'
 import { DAY_STATUS } from '@/constants/dayStatus'
 import { useMenuStore } from '@/stores/menu.store'
-import { formatDate, getWeekString, isDeadlinePassed, parseLocalDate } from '@/utils/dateHelpers'
+import { formatDate, getWeekString, getWeekDatesFromMonday, isDeadlinePassed, parseLocalDate } from '@/utils/dateHelpers'
 
 // Function to manage menu data for a pecific week
 export function useWeekMenu () {
@@ -90,33 +90,17 @@ export function useWeekMenu () {
   })
 
   // Unique Mon-Fri dates for the active week with their status.
-  // SHAPE: [{ date: "2025-06-09", status: "open" | "off_day" | "holiday" | "deadline_passed" }]
-  // Deduplicating, slimming down, and sorting.
+  // SHAPE: [{ date: "2026-07-20", status: "open" | "off_day" | "holiday" | "deadline_passed" }]
   const weekDays = computed(() => {
+    if (!activeWeek.value) {
+      return []
+    }
 
-    // Create a set for holding unique values like the SHAPE above
-    const seen = new Set()
-
-    // Go through the weekMenu items array containing dates and statuses for the current or active week
-    return weekMenu.value
-      .filter(item => {
-
-        // If the date of a particular weekMenu item is already seen, 
-        // ignore from adding to the set. i.e DE-DUPLICATION 
-        if (seen.has(item.date)) {
-          return false
-        }
-
-        // If not, remember the date of the particular week array only not the food values and insert into the set
-        seen.add(item.date)
-        return true
-      })
-      // SLIMMING - Strap all other heavy details and get only the date and status from the weekMenu arrays
-      .map(item => ({ date: item.date, status: item.status }))
-      
-      // SORTING - Arrange the new set values in ascending order, 
-      // old date to new date i.e mon 2 to fri 7
-      .sort((a, b) => a.date.localeCompare(b.date))
+    // Access the helper function to display all menu items in the active date weeks
+    return getWeekDatesFromMonday(activeWeek.value).map(dateStr => ({
+      date: dateStr,
+      status: dayStatus(dateStr),
+    }))
   })
 
   // The list of menu items for the day the user is currently viewing
