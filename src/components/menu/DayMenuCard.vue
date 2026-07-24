@@ -96,11 +96,11 @@
   >
     <!-- Day Header -->
     <div class="mb-4">
-      <div class="font-weight-bold text-black" style="font-size: 20px;">
+      <div class="font-weight-bold" style="font-size: 20px; color: #1E1E1E;">
         {{ day }}
       </div>
 
-      <div class="text-caption text-black">
+      <div class="text-caption text-black" style="color: #1E1E1E;">
         {{ date }}
       </div>
     </div>
