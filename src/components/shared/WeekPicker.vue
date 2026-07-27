@@ -29,7 +29,7 @@
 <template>
   <div
     class="d-flex align-center border px-1 py-2 bg-white"
-    style="border-color: #D2451E !important;"
+    style="border-color: #D2451E;"
   >
     <!-- Previous Week Button -->
     <v-btn

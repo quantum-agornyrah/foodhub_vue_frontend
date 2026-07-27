@@ -12,10 +12,6 @@
   import { useWeekMenu } from '@/composables/useWeekMenu.js'
   import { formatDate, getWeekDates, getWeekString, parseLocalDate } from '@/utils/dateHelpers.js'
   import SkeletonCard from '../../components/shared/SkeletonCard.vue'
-  
-  //Mobile responsiveness
-  import { useDisplay } from 'vuetify'
-  const { mobile } = useDisplay()
 
   const router = useRouter()
   const route = useRoute()
@@ -25,29 +21,15 @@
   const weekOffset = ref(1)
 
   // Use the composable
-  const {
-    weekMenu,
-    weekDays,
-    activeDay,
-    activeDayMenu,
-    activeDayIsOff,
-    isLoading,
-    fetchWeekMenu,
-    setActiveDay,
-    createMenu,
-    createBulkMenu,
-    updateMenu,
-    deleteMenu,
-  } = useWeekMenu()
+  const { weekMenu, weekDays, activeDay, activeDayMenu, activeDayIsOff, isLoading, fetchWeekMenu, setActiveDay, createMenu, createBulkMenu, updateMenu, deleteMenu} = useWeekMenu()
 
   // Dialog states
   const showFoodDialog = ref(false)
   const showBulkFoodDialog = ref(false)
   const showOffDayDialog = ref(false)
-  const actionType = ref(null) // 'delete' or 'off_day'
   const showDeleteDialog = ref(false)
-  const itemToDelete = ref(null)
 
+  const itemToDelete = ref(null)
   const editingFood = ref(null)
 
   // Fetch data on mount
@@ -78,15 +60,10 @@
 
   // Watch for week changes
   watch(weekOffset, (newOffset) => {
-    // Produce the 5 dates (Mon - Fri) from the getWeekDates function
     const dates = getWeekDates(newOffset)
-    // Get the starting monday or the first array item from the dates
     const mondayDate = getWeekString(dates[0])
 
-    // Set the active day to Monday of the new week
     setActiveDay(formatDate(dates[0]))
-
-    // Fetch the menu items for all the starting date to Friday
     fetchWeekMenu(mondayDate)
   })
 
@@ -94,9 +71,8 @@
   const selectedDayInfo = computed(() => {
     if (!activeDay.value) return null
 
-    // Use parseLocalDate to avoid timezone issues
+    // ParseLocalDate to avoid timezone issues
     const date = parseLocalDate(activeDay.value)
-
     const options = { weekday: 'long', month: 'short', day: 'numeric' }
     const formatted = date.toLocaleDateString('en-US', options)
 
@@ -160,49 +136,71 @@
 
   // Save food item (create or update)
   async function handleSaveFood (foodData) {
-    const dayName = parseLocalDate(activeDay.value).toLocaleDateString('en-US', { weekday: 'long' })
-    const data = {
-      ...foodData,
-      day: dayName,
-      date: activeDay.value,
-      weekString: getWeekString(parseLocalDate(activeDay.value)),
+    if (!editingFood.value?.id) {
+      snackError('No food item selected for editing')
+      return
     }
 
-    let success
-    success = await (editingFood.value ? updateMenu(editingFood.value.id, data) : createMenu(data))
+    if (activeDayIsOff.value) {
+      snackError('Cannot edit food items on an off day')
+      return
+    }
 
-    if (success) {
-      showFoodDialog.value = false
-      snackSuccess(editingFood.value ? 'Food item updated' : 'Food item added')
-    } else {
-      snackError('Failed to save food item')
+    try {
+      const localDate = parseLocalDate(activeDay.value)
+      const dayName = localDate.toLocaleDateString('en-US', { weekday: 'long' })
+
+      const data = {
+        ...foodData,
+        day: dayName,
+        date: activeDay.value,
+        weekString: getWeekString(localDate),
+      }
+
+      const success = await updateMenu(editingFood.value.id, data)
+
+      if (success) {
+        showFoodDialog.value = false
+        snackSuccess('Food item updated')
+      } else {
+        snackError('Failed to update food item')
+      }
+    } catch (error) {
+      console.error('Error updating food item:', error)
+      snackError('Food update failed')
     }
   }
 
   //Save Bulk food items
-  async function handleSaveBulkFoods (foods){
-    const dayName = new Date(activeDay.value + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' })
-
-    const items = foods.map(food => ({
-      ...food,
-      day: dayName,
-      date: activeDay.value,
-      weekString: getWeekString(parseLocalDate(activeDay.value)),
-      imageUrl: food.imageUrl || '',
-      status: null,
-    }))
-
+  async function handleSaveBulkFoods (foods) {
     if (activeDayIsOff.value) {
       snackError('Cannot add food items to an off day')
       return
     }
 
-    const success = await createBulkMenu(items)
+    try {
+      const localDate = parseLocalDate(activeDay.value)
+      const dayName = localDate.toLocaleDateString('en-US', { weekday: 'long' })
 
-    if (success) {
-      showBulkFoodDialog.value = false
-      snackSuccess(`${items.length} food items added`)
-    } else{
+      const items = foods.map(food => ({
+        ...food,
+        day: dayName,
+        date: activeDay.value,
+        weekString: getWeekString(localDate),
+        imageUrl: food.imageUrl || '',
+        status: null,
+      }))
+
+      const success = await createBulkMenu(items)
+
+      if (success) {
+        showBulkFoodDialog.value = false
+        snackSuccess(`${items.length} food item${items.length === 1 ? '' : 's'} added`)
+      } else {
+        snackError('Failed to add food items')
+      }
+    } catch (error) {
+      console.error('Error saving bulk foods:', error)
       snackError('Failed to add food items')
     }
   }
@@ -251,12 +249,13 @@
           </h1>
         </v-col>
 
+        <!-- 1. Week Navigation -->
         <v-col class="d-flex justify-md-end ga-3 flex-wrap" cols="12" sm="5">
           <WeekPicker v-model="weekOffset"/>
         </v-col>
       </v-row>
 
-      <!-- Week Strip -->
+      <!-- 2. Day Selection Tabs -->
       <div class="mb-6">
         <WeekStrip
           :off-days="offDaysList"
@@ -266,12 +265,12 @@
         />
       </div>
 
-      <!-- Selected Day Card -->
+      <!-- 3. Selected Day Card -->
       <v-card
         v-if="selectedDayInfo"
         class="mb-6 pa-6"
         elevation="0"
-        style="border: 1px solid #D2451E !important;"
+        style="border: 1px solid #D2451E;"
       >
         <div class="d-flex flex-column flex-sm-row justify-space-between align-sm-center ga-4 mb-6">
           <div>
@@ -395,7 +394,7 @@
       </v-card>
     </div>
 
-    <!-- Dialogs -->
+    <!-- 4. Dialogs -->
     <FoodFormDialog
       v-model="showFoodDialog"
       :food-item="editingFood"

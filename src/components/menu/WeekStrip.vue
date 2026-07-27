@@ -30,7 +30,7 @@
     return getWeekDates(props.weekOffset)
   })
 
-// 4. Automaticall define tabs for eachday of the weekoffset
+// 4. Automatically define tabs for each day of the weekoffset
   const tabs = computed(() => {
     // List all days
     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
