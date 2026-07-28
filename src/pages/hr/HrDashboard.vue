@@ -2,8 +2,11 @@
   import { storeToRefs } from 'pinia'
   import { computed, onMounted, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
+
   import AppShell from '@/components/layout/AppShell.vue'
   import DayMenuCard from '@/components/menu/DayMenuCard.vue'
+
+  import SkeletonCard from '@/components/shared/SkeletonCard.vue'
   import WeekPicker from '@/components/shared/WeekPicker.vue'
   import { useSnackbar } from '@/composables/useSnackbar.js'
   import { useWeekMenu } from '@/composables/useWeekMenu.js'
@@ -11,7 +14,6 @@
   import { useOrderStore } from '@/stores/orders.store.js'
   import { useStaffStore } from '@/stores/staff.store.js'
   import { getWeekDates, getWeekString } from '@/utils/dateHelpers.js'
-  import SkeletonCard from '../../components/shared/SkeletonCard.vue'
 
   const router = useRouter()
 
@@ -20,16 +22,18 @@
   const orderStore = useOrderStore()
   const menuStore = useMenuStore()
 
-  // Get reactive state from stores
   const { allStaff } = storeToRefs(staffStore)
   const { allOrders } = storeToRefs(orderStore)
-  const deadlineDate = ref('')
-  const deadlineTime = ref('09:00')
-  const showDeadlineMenu = ref(false)
   const { success: snackSuccess, error: snackError } = useSnackbar()
 
   // Week offset state (0 = current week)
   const weekOffset = ref(1)
+  const deadlineDate = ref('')
+  const deadlineTime = ref('09:00')
+  const showDeadlineMenu = ref(false)  
+  
+  // Use the composable to fetch menu data
+  const { weekMenu, weekDays, isLoading, fetchWeekMenu } = useWeekMenu()
 
   // Dynamic page title based on week offset
   const pageTitle = computed(() => {
@@ -38,74 +42,12 @@
     return 'Week Overview'
   })
 
-  // Computed: current deadline for the visible week
-  const currentWeekString = computed(() => getWeekString(getWeekDates(weekOffset.value)[0]))
+  // Get the current deadline for the visible week
+  const weekDates = computed(() => getWeekDates(weekOffset.value))
 
-  const savedDeadline = computed(() =>
-    menuStore.deadlineByWeek(currentWeekString.value),
-  )
+  const currentWeekString = computed(() => getWeekString(weekDates.value[0]))
 
-  // Save handler
-  async function saveDeadline () {
-    if (!deadlineDate.value || !deadlineTime.value) return
-
-    const ok = await menuStore.setWeekDeadline(
-      currentWeekString.value,
-      `${deadlineDate.value}T${deadlineTime.value}:00`,
-    )
-
-    if (ok) {
-      snackSuccess('Ordering deadline saved')
-      showDeadlineMenu.value = false
-    } else {
-      snackError('Failed to save deadline')
-    }
-  }
-
-  // Pre-fill the picker fields when HR re-opens the deadline menu
-  watch(showDeadlineMenu, (isOpen) => {
-    if (isOpen && savedDeadline.value) {
-      const d = new Date(savedDeadline.value)
-      const year  = d.getFullYear()
-      const month = String(d.getMonth() + 1).padStart(2, '0')
-      const day   = String(d.getDate()).padStart(2, '0')
-      deadlineDate.value = `${year}-${month}-${day}`
-      deadlineTime.value = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-    }
-  })
-
-  // Use the composable to fetch menu data
-  const { weekMenu, weekDays, isLoading, fetchWeekMenu } = useWeekMenu()
-
-  // Fetch all data on mount
-  onMounted(async () => {
-    // Fetch menu for next week FIRST
-    const weekStartDate = getWeekString(getWeekDates(1)[0])
-
-    // Fetch all data in parallel
-    await Promise.all([
-      fetchWeekMenu(weekStartDate),
-      staffStore.getAllStaff(),
-      orderStore.getAllOrders(),
-    ])
-  })
-
-  // Watch for week changes
-  watch(weekOffset, (newOffset) => {
-    // Produce the 5 dates (Mon - Fri) from the getWeekDates function
-    const dates = getWeekDates(newOffset)
-
-    // Get the starting monday or the first array item from the dates
-    const mondayDate = getWeekString(dates[0])
-
-    // Fetch the menu items for all the starting date to Friday
-    fetchWeekMenu(mondayDate)
-  })
-
-  // Get the dates for the current week for display
-  const weekDates = computed(() => {
-    return getWeekDates(weekOffset.value)
-  })
+  const savedDeadline = computed(() => menuStore.deadlineByWeek(currentWeekString.value))
 
   // Stats computed from real data
   const stats = computed(() => {
@@ -114,18 +56,10 @@
       d => d.status === 'off_day' || d.status === 'holiday',
     ).length
 
-    // Get current week string for filtering orders
-    const currentWeekString = getWeekString(getWeekDates(weekOffset.value)[0])
-
     // Filter orders for current week
-    const currentWeekOrders = allOrders.value.filter(order => {
-      // If your orders have weekString property, use it
-      if (order.weekString) {
-        return order.weekString === currentWeekString
-      }
-      // Otherwise, return all for now
-      return true
-    })
+    const currentWeekOrders = allOrders.value.filter(
+      order => !order.weekString || order.weekString === currentWeekString.value
+    )
 
     // Count submitted orders
     const submittedOrders = currentWeekOrders.filter(
@@ -147,31 +81,21 @@
 
   // Format day cards data
   const dayCards = computed(() => {
+    // Day names
+    const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+    
     return weekDates.value.map((date, index) => {
-      // Day names
-      const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-
       // Format date as "Jun 9"
       const options = { month: 'short', day: 'numeric' }
       const formattedDate = date.toLocaleDateString('en-US', options)
-
-      // Get the YYYY-MM-DD format
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      const dateString = `${year}-${month}-${day}`
+      const dateString = date.toISOString().split('T')[0]
 
       // Find menu data for this date
       const dayData = weekDays.value.find(d => d.date === dateString)
       const menuItems = weekMenu.value.filter(item => item.date === dateString)
 
       // Count orders for this specific date
-      const ordersForDay = allOrders.value.filter(order => {
-        if (order.date) {
-          return order.date === dateString
-        }
-        return false
-      })
+      const ordersForDay = allOrders.value.filter(order => order.date === dateString)
 
       return {
         day: dayNames[index],
@@ -185,16 +109,42 @@
     })
   })
 
-  // Helper function inline or reuse formatDate from dateHelpers
-  const weekMin = computed(() => {
-    const d = getWeekDates(0)[0]
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  // Maximum and Minimum dates for deadline date selection
+  const weekMin = computed(() => weekDates.value[0]?.toISOString().split('T')[0])
+  const weekMax = computed(() => weekDates.value[4]?.toISOString().split('T')[0])
+
+  // Fetch the menu items for all the starting date to Friday
+  watch(weekOffset, (newOffset) => {
+    const dates = getWeekDates(newOffset)
+    const mondayDate = getWeekString(dates[0])
+    fetchWeekMenu(mondayDate)
   })
 
-  const weekMax = computed(() => {
-    const d = getWeekDates(0)[4]
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  // Pre-fill the picker fields when HR re-opens the deadline menu
+  watch(showDeadlineMenu, (isOpen) => {
+    if (isOpen && savedDeadline.value) {
+      const d = new Date(savedDeadline.value)
+      deadlineDate.value = d.toISOString().split('T')[0]
+      deadlineTime.value = d.toTimeString().slice(0, 5)
+    }
   })
+
+  // Save handler
+  async function saveDeadline () {
+    if (!deadlineDate.value || !deadlineTime.value) return
+
+    const ok = await menuStore.setWeekDeadline(
+      currentWeekString.value,
+      `${deadlineDate.value}T${deadlineTime.value}:00`,
+    )
+
+    if (ok) {
+      snackSuccess('Ordering deadline saved')
+      showDeadlineMenu.value = false
+    } else {
+      snackError('Failed to save deadline')
+    }
+  }
 
   // Navigate to add item (menu manager page)
   function handleAddItem (data) {
@@ -203,17 +153,30 @@
       query: { date: data.dateString }, // Query parameter
     })
   }
+
+  // Fetch all data on mount
+  onMounted(async () => {
+    // Fetch menu for next week FIRST
+    const weekStartDate = getWeekString(getWeekDates(1)[0])
+
+    // Fetch all data in parallel
+    await Promise.all([
+      fetchWeekMenu(weekStartDate),
+      staffStore.getAllStaff(),
+      orderStore.getAllOrders(),
+    ])
+  })
 </script>
 
 <template>
   <AppShell>
-    <div style="max-width: 1400px; margin: 0 auto; padding: 0px 16px;">
+    <div style="max-width: 1400px; margin: 0 auto; padding: 0px 16px 50px;">
       <!-- Page Header -->
       <v-row class="d-flex mb-4 align-center justify-space-between">
         <v-col class="d-flex justify-start" cols="12" sm="6">
           <h1
             class="font-weight-bold text-display-medium"
-            style="letter-spacing: 0.5px; color: #D2451E !important;"
+            style="letter-spacing: 0.5px; color: #D2451E;"
           >
             {{ pageTitle }}
           </h1>
@@ -237,7 +200,7 @@
             class="pa-5 border-0"
             color="white"
             elevation="0"
-            style="border: 1px solid #D2451E !important;"
+            style="border: 1px solid #D2451E;"
           >
             <div class="font-weight-medium mb-1" style="font-size: 20px;">
               {{ stat.title }}
@@ -256,7 +219,7 @@
           <v-card
             class="pa-5"
             elevation="0"
-            style="border: 1px solid #D2451E !important;"
+            style="border: 1px solid #D2451E;"
           >
             <div class="d-flex align-center justify-space-between flex-wrap ga-4">
 
@@ -283,7 +246,7 @@
                 </div>
               </div>
 
-              <!-- Right: picker + save button inside a v-menu -->
+              <!-- Right: date & time picker + save button inside a v-menu -->
               <v-menu v-model="showDeadlineMenu" :close-on-content-click="false">
                 <template #activator="{ props }">
                   <v-btn
