@@ -49,6 +49,15 @@
 
   const savedDeadline = computed(() => menuStore.deadlineByWeek(currentWeekString.value))
 
+  // Formats a Date object to local YYYY-MM-DD without UTC timezone shift
+  function toLocalDateString(date) {
+    if (!date) return ''
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
   // Stats computed from real data
   const stats = computed(() => {
     // Count off days from the week data
@@ -88,7 +97,7 @@
       // Format date as "Jun 9"
       const options = { month: 'short', day: 'numeric' }
       const formattedDate = date.toLocaleDateString('en-US', options)
-      const dateString = date.toISOString().split('T')[0]
+      const dateString = toLocalDateString(date)
 
       // Find menu data for this date
       const dayData = weekDays.value.find(d => d.date === dateString)
@@ -110,8 +119,8 @@
   })
 
   // Maximum and Minimum dates for deadline date selection
-  const weekMin = computed(() => weekDates.value[0]?.toISOString().split('T')[0])
-  const weekMax = computed(() => weekDates.value[4]?.toISOString().split('T')[0])
+  const weekMin = computed(() => toLocalDateString(weekDates.value[0]))
+  const weekMax = computed(() => toLocalDateString(weekDates.value[4]))
 
   // Fetch the menu items for all the starting date to Friday
   watch(weekOffset, (newOffset) => {
@@ -124,8 +133,11 @@
   watch(showDeadlineMenu, (isOpen) => {
     if (isOpen && savedDeadline.value) {
       const d = new Date(savedDeadline.value)
-      deadlineDate.value = d.toISOString().split('T')[0]
-      deadlineTime.value = d.toTimeString().slice(0, 5)
+      deadlineDate.value = toLocalDateString(d)
+
+      const hours = String(d.getHours()).padStart(2, '0')
+      const minutes = String(d.getMinutes()).padStart(2, '0')
+      deadlineTime.value = `${hours}:${minutes}`
     }
   })
 
