@@ -34,7 +34,7 @@
 
 // 3. Define the table elements
   // Define day names for table column headers
-  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
 
   // Define other table headers
   const headers = computed(() => {

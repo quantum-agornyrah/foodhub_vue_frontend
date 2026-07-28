@@ -1,8 +1,10 @@
 <script setup>
-  import { computed, onMounted, ref, onUnmounted } from 'vue'
+  import { computed, onMounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
+
   import AppShell from '@/components/layout/AppShell.vue'
   import ReviewDialog from '@/components/shared/ReviewDialog.vue'
+
   import { useAuth } from '@/composables/useAuth'
   import { useMenuStore } from '@/stores/menu.store'
   import { useOrderStore } from '@/stores/orders.store'
@@ -10,8 +12,9 @@
   import { useSnackbar } from '@/composables/useSnackbar'
   import SkeletonCard from '@/components/shared/SkeletonCard.vue'
 
-  // Load auth, order store, and menu store
   const router = useRouter()
+
+  // Load auth, order store, and menu store
   const { user } = useAuth()
   const orderStore = useOrderStore()
   const menuStore = useMenuStore()
@@ -21,17 +24,21 @@
   const search = ref('')
   const selectedMonth = ref('All Months')
 
+  // Review Dialog Logic
+  const showReviewDialog = ref(false)
+  const selectedOrderToReview = ref(null)
+
   const headers = [
     { title: 'Week Date', key: 'title', sortable: false, width: '250px' },
-    { title: 'Mon', key: 'day_0', sortable: false, align: 'center', width: '150px' },
-    { title: 'Tue', key: 'day_1', sortable: false, align: 'center', width: '150px' },
-    { title: 'Wed', key: 'day_2', sortable: false, align: 'center', width: '150px' },
-    { title: 'Thu', key: 'day_3', sortable: false, align: 'center', width: '150px' },
-    { title: 'Fri', key: 'day_4', sortable: false, align: 'center', width: '150px' },
+    { title: 'Monday', key: 'days.0', sortable: false, align: 'center', width: '150px' },
+    { title: 'Tuesday', key: 'days.1', sortable: false, align: 'center', width: '150px' },
+    { title: 'Wednesday', key: 'days.2', sortable: false, align: 'center', width: '150px' },
+    { title: 'Thursday', key: 'days.3', sortable: false, align: 'center', width: '150px' },
+    { title: 'Friday', key: 'days.4', sortable: false, align: 'center', width: '150px' },
     { title: 'Status', key: 'status', sortable: false, align: 'center', width: '50px' },
   ]
 
-  // Smart back button fallback helper
+
   function goBack() {
     if (window.history.state && window.history.state.back) {
       router.back()
@@ -49,11 +56,10 @@
       ])
 
       // Check and auto-update expired orders
-      await checkAndUpdateExpiredOrders()
-
-      // Refetch to get updated data
-      await orderStore.getMyOrders(user.value.id)
-
+      const didNotUpdate = await checkAndUpdateExpiredOrders()
+      if (didNotUpdate) {
+        await orderStore.getMyOrders(user.value.id)
+      }
     } catch (error) {
       console.error('Failed to load history data:', error)
     } finally {
@@ -61,10 +67,7 @@
     }
   })
 
-  // Review Dialog Logic
-  const showReviewDialog = ref(false)
-  const selectedOrderToReview = ref(null)
-
+  // Function to open review dialog
   function openReview (order) {
     if (!order) return
     selectedOrderToReview.value = order
@@ -79,21 +82,22 @@
         comment: review.comment,
       })
 
-      if (success) {
-        snackSuccess('Review submitted successfully')
-        // Re-fetch the user's personal orders to update the UI instantly
-        await orderStore.getMyOrders(user.value.id)
-
-        // Update the selected order ref with fresh data
-        const updatedOrder = orderStore.myOrders.find(o => o.id === review.id)
-        if (updatedOrder) {
-          selectedOrderToReview.value = updatedOrder
-          showReviewDialog.value = false // Close dialog ONLY after successful API update
-        }
-        else{
-          snackError('Failed to submit review')
-        }
+      if (!success){
+        snackError('Failed to submit review')
+        return
       }
+
+      // Return success notification & refresh table
+      snackSuccess('Review submitted successfully')
+      await orderStore.getMyOrders(user.value.id)
+
+      // Update the selected order ref with fresh data
+      const updatedOrder = orderStore.myOrders.find(o => o.id === review.id)
+      if (updatedOrder) {
+        selectedOrderToReview.value = updatedOrder
+      }
+      showReviewDialog.value = false
+
     } catch (error) {
       console.error('Failed to submit review', error)
       snackError('Failed to submit review')
@@ -104,44 +108,32 @@
   async function checkAndUpdateExpiredOrders () {
     // Get all unique week strings from myOrders
     const weekStrings = [...new Set(orderStore.myOrders.map(o => o.weekString))]
+    const now = new Date()
+    let hasUpdates = false
 
     for (const weekString of weekStrings) {
-      // 1. Fetch deadline from backend/mock so it's loaded in memory
+      // Fetch and get deadline for current week
       await menuStore.getWeekDeadline(weekString)
-
-      // Get deadline for this week
       const weekDeadline = menuStore.deadlineByWeek(weekString)
-      if (!weekDeadline) continue
+      
+      // Find all orders for this week that are still "pending" OR "draft"
+      if (weekDeadline && now > new Date(weekDeadline)){
+        const ordersToUpdate = orderStore.myOrders.filter(
+          o => o.weekString === weekString && (o.status === 'pending' || o.status === 'draft'),
+        )
 
-      // Check if deadline has passed
-      const isDeadlinePassed = new Date() > new Date(weekDeadline)
-      if (!isDeadlinePassed) continue
-
-      // 2. Find all orders for this week that are still "pending" OR "draft"
-      const ordersToUpdate = orderStore.myOrders.filter(
-        o => o.weekString === weekString && (o.status === 'pending' || o.status === 'draft'),
-      )
-
-      // Update each pending/draft order to "submitted"
-      for (const order of ordersToUpdate) {
-        await orderStore.updateOrder(order.id, {
-          ...order,
-          status: 'submitted',
-        })
+        // Update each pending/draft order to "submitted"
+        if (ordersToUpdate.length > 0){
+          hasUpdates = true
+          await Promise.all(
+            ordersToUpdate.map(order => 
+              orderStore.updateOrder(order.id, {...order, status: 'submitted'})
+            )
+          )
+        }
       }
     }
-  }
-
-  // Counterpart to checkAndUpdateExpiredOrders:
-  // When HR extends a passed deadline, revert submitted orders back to 'pending'
-  async function revertOrdersForWeek (weekString) {
-    const ordersToRevert = orderStore.myOrders.filter(
-      o => o.weekString === weekString && o.status === 'submitted',
-    )
-    for (const order of ordersToRevert) {
-      await orderStore.updateOrder(order.id, { ...order, status: 'pending' })
-    }
-    await orderStore.getMyOrders(user.value.id)
+    return hasUpdates
   }
 
   // Group and format order weeks for listing
@@ -167,12 +159,11 @@
       const monday = parseLocalDate(weekStart)
 
       // Format Mon-Fri range label: e.g., "Week of Jun 9 – 13, 2025"
-      const mondayObj = new Date(monday)
       const fridayObj = new Date(monday)
-      fridayObj.setDate(mondayObj.getDate() + 4)
+      fridayObj.setDate(monday.getDate() + 4)
 
       const options = { month: 'short', day: 'numeric', year: 'numeric' }
-      const startStr = mondayObj.toLocaleDateString('en-US', options)
+      const startStr = monday.toLocaleDateString('en-US', options)
       const endStr = fridayObj.toLocaleDateString('en-US', options)
       const title = `Week of ${startStr} – ${endStr}`
 
@@ -201,18 +192,13 @@
         let selection = null
         let status = 'open'
 
-        if (isMenuOff) {
+        if (isMenuOff || order?.status === 'off' || order?.status === 'off_day') {
           status = 'off_day'
           offCount++
         } else if (order) {
-          if (order.status === 'off' || order.status === 'off_day') {
-            status = 'off_day'
-            offCount++
-          } else {
-            selection = order.menuTitle
-            status = order.status
-            foodCount++
-          }
+          selection = order.menuTitle
+          status = order.status
+          foodCount++
         }
 
         days.push({
@@ -232,36 +218,23 @@
       const weekDeadline = menuStore.deadlineByWeek(weekStart)
       const isDeadlinePassed = weekDeadline ? new Date() > new Date(weekDeadline) : false
 
-      // Determine week status
-      let weekStatus = 'submitted' // Past weeks always default to submitted
-
+      // Past weeks always default to submitted
+      let weekStatus = 'submitted'
       if (isFuture) {
-        // Future weeks (e.g. next week): only submitted if ALL orders are actually submitted
-        // Draft/pending orders = still in progress
         weekStatus = isSubmitted ? 'submitted' : 'in_progress'
       } else if (isCurrent) {
-        // Current week: in the new cycle staff order for NEXT week, so current week
-        // is effectively closed. Show submitted unless explicitly still pending.
-        if (isDeadlinePassed || orders.length === 0 || isSubmitted) {
-          weekStatus = 'submitted'
-        } else {
-          weekStatus = 'in_progress'
-        }
+        weekStatus = isDeadlinePassed || orders.length === 0 || isSubmitted ? 'submitted' : 'in_progress'
       }
-      // Past weeks: always 'submitted' (default set above)
 
       // Subtitle text
-      let subtitle = ''
-      if (isCurrent) {
-        subtitle += isDeadlinePassed ? 'Deadline passed · ' : 'Current week · '
-      }
+      let subtitle = isCurrent ? (isDeadlinePassed ? 'Deadline passed · ' : 'Current week · ') : ''
 
       const maxActiveDays = 5 - offCount
-      subtitle += foodCount === maxActiveDays && foodCount > 0 ? `${foodCount} day${foodCount === 1 ? '' : 's'} · all ordered` : `${foodCount} selection${foodCount === 1 ? '' : 's'} made`
+      subtitle += foodCount === maxActiveDays && foodCount > 0 
+        ? `${foodCount} day${foodCount === 1 ? '' : 's'} · all ordered` 
+        : `${foodCount} selection${foodCount === 1 ? '' : 's'} made`
 
-      if (offCount > 0) {
-        subtitle += ` · ${offCount} off day${offCount === 1 ? '' : 's'}`
-      }
+      if (offCount > 0) subtitle += ` · ${offCount} off day${offCount === 1 ? '' : 's'}`
 
       return {
         weekStart,
@@ -271,22 +244,7 @@
         days,
         highlight: isCurrent,
       }
-    }).sort((a, b) => b.weekStart.localeCompare(a.weekStart)) // Newest first
-  })
-
-  // Modify to include searchable flat strings:
-  const historyWeeksMapped = computed(() => {
-    return historyWeeks.value.map(week => {
-      return {
-        ...week,
-        // Flat strings for search index lookup
-        monSelection: week.days[0].selection || '',
-        tueSelection: week.days[1].selection || '',
-        wedSelection: week.days[2].selection || '',
-        thuSelection: week.days[3].selection || '',
-        friSelection: week.days[4].selection || '',
-      }
-    })
+    }).sort((a, b) => b.weekStart.localeCompare(a.weekStart))
   })
 
   // Extract all unique months from order history
@@ -302,8 +260,9 @@
 
   // Filter weeks based on selected Month dropdown
   const filteredHistoryWeeks = computed(() => {
-    return historyWeeksMapped.value.filter(week => {
-      if (selectedMonth.value === 'All Months') return true
+    if (selectedMonth.value === 'All Months') return historyWeeks.value
+
+    return historyWeeks.value.filter(week => {
       const date = parseLocalDate(week.weekStart)
       const monthName = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
       return monthName === selectedMonth.value
@@ -311,7 +270,6 @@
   })
 
 </script>
-
 <template>
   <AppShell>
     <div style="max-width: 1400px; margin: 0 auto; padding: 0 16px;">
@@ -359,9 +317,9 @@
         </v-row>
 
         <!-- History Listing Table -->
-        <div v-if="historyWeeksMapped.length > 0">
+        <div v-if="filteredHistoryWeeks.length > 0">
           <v-card elevation="0" style="border: 1px solid #BDBDBD;">
-            <!-- Search Toolbar matching HR style -->
+            <!-- Search Toolbar -->
             <v-card-title class="d-flex align-center pa-4" style="background-color: #FFF3E0;">
               <v-text-field
                 v-model="search"
@@ -396,12 +354,12 @@
               <template
                 v-for="index in [0, 1, 2, 3, 4]"
                 :key="index"
-                #[`item.day_${index}`]="{ item }"
+                #[`item.days.${index}`]="{ item }"
               >
                 <div class="d-flex flex-column align-center py-2">
                   <!-- Selection Name -->
                   <span 
-                    v-if="item.days[index].status === 'off_day' || item.days[index].status === 'holiday'" 
+                    v-if="['off_day', 'holiday'].includes(item.days[index].status)" 
                     class="text-red-darken-2 font-weight-bold text-caption"
                   >
                     Off day
@@ -490,7 +448,6 @@
 </template>
 
 <style scoped>
-/* Custom table styling matching HR dashboard */
 :deep(.v-data-table) {
   border-radius: 0;
 }
