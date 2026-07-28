@@ -2,9 +2,12 @@
   import { storeToRefs } from 'pinia'
   import { computed, onMounted, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
+
   import AppShell from '@/components/layout/AppShell.vue'
   import WeekOrderTable from '@/components/orders/WeekOrderTable.vue'
   import WeekPicker from '@/components/shared/WeekPicker.vue'
+  import SkeletonCard from '@/components/shared/SkeletonCard.vue'
+
   import { useSnackbar } from '@/composables/useSnackbar.js'
   import { getDepartmentsWithAll } from '@/constants/departments.js'
   import { useMenuStore } from '@/stores/menu.store.js'
@@ -12,7 +15,6 @@
   import { useStaffStore } from '@/stores/staff.store.js'
   import { formatDate, getWeekDates, getWeekString } from '@/utils/dateHelpers.js'
   import { exportOrdersToExcel, exportOrdersToPDF } from '@/utils/exportHelpers.js'
-  import SkeletonCard from '@/components/shared/SkeletonCard.vue'
 
   const router = useRouter()
   const { success: snackSuccess, error: snackError } = useSnackbar()
@@ -22,99 +24,80 @@
   const orderStore = useOrderStore()
   const menuStore = useMenuStore()
 
-  // Get reactive state
   const { allStaff } = storeToRefs(staffStore)
   const { allOrders } = storeToRefs(orderStore)
   const { allMenuItems } = storeToRefs(menuStore)
-  const selectedDepartment = ref('All')
-  const exportFormat = ref('pdf') // 'pdf' or 'excel'
 
-  // Week offset state
+  // Get reactive state
+  const selectedDepartment = ref('All')
+  const exportFormat = ref('pdf')
   const weekOffset = ref(1)
   const isLoading = ref(false)
-
-  // 1. Fetch static reference data once on mount
-  onMounted(() => {
-    staffStore.getAllStaff()
-  })
-
-  // 2. Automatically fetch orders & menu items whenever weekOffset changes (including on page load)
-  watch(weekOffset, async (newOffset) => {
-    isLoading.value = true
-    const weekStartDate = getWeekString(getWeekDates(newOffset)[0])
-
-    try {
-      await Promise.all([
-        orderStore.getAllOrders({ week_string: weekStartDate}),
-        menuStore.getAllMenuItems({ week_string: weekStartDate}),
-      ])
-    } finally {
-      isLoading.value = false
-    }
-  }, { immediate: true })
-
-  // Get week dates
-  const weekDates = computed(() => {
-    return getWeekDates(weekOffset.value).map(date => formatDate(date))
-  })
-
-  // Current week orders
-  const currentWeekOrders = computed(() => {
-    const weekString = getWeekString(getWeekDates(weekOffset.value)[0])
-
-    return allOrders.value
-      .filter(order => {
-        if (order.weekString) {
-          return order.weekString === weekString
-        }
-        return weekDates.value.includes(order.date)
-      })
-      .map(order => {
-        // Enrich order with staff data
-        const staff = allStaff.value.find(s => s.id === order.staffId)
-        return {
-          ...order,
-          staffName: staff?.name || 'Unknown Staff',
-          department: staff?.department || 'N/A', // ✨ ADD THIS
-        }
-      })
-      .filter(order => {
-        // Filter by department
-        if (selectedDepartment.value === 'All') return true
-        return order.department === selectedDepartment.value
-      })
-  })
 
   // Add departments list
   const departments = computed(() => getDepartmentsWithAll())
 
+  // Compute dates
+  const rawWeekDates = computed(() => getWeekDates(weekOffset.value))
+
+  const weekDates = computed(() => rawWeekDates.value.map(d => formatDate(d)))
+
+  const currentWeekString = computed(() => getWeekString(rawWeekDates.value[0]))
+
+  // Current week orders
+  const currentWeekOrders = computed(() => {
+
+    const staffMap = new Map(allStaff.value.map(s => [s.id, s]))
+
+    return allOrders.value
+      .filter(order => {
+        const isThisWeek = order.weekString 
+          ? order.weekString === currentWeekString.value 
+          : weekDates.value.includes(order.date)
+
+        if(!isThisWeek) return false
+
+        // Filter by department
+        if (selectedDepartment.value === 'All') return true
+        const staff = staffMap.get(order.staffId)
+        return (staff?.department || 'N/A') === selectedDepartment.value
+      })
+      .map(order => {
+        const staff = staffMap.get(order.staffId)
+        return {
+          ...order,
+          staffName: staff?.name || 'Unknown Staff',
+          department: staff?.department || 'N/A',
+        }
+      })
+  })
+
   // Stats
   const stats = computed(() => {
     const orders = currentWeekOrders.value
-
     const totalOrders = orders.length
+
+    if (totalOrders === 0){
+      return [
+        { title: 'Total orders', count: 0 },
+        { title: 'Most Popular', count: 'None', isText: true}
+      ]
+    } 
 
     // Find most popular item
     const itemCounts = {}
+    let maxCount = 0
+
     for (const order of orders) {
-      const itemName = order.menuTitle || 'Unknown'
-      itemCounts[itemName] = (itemCounts[itemName] || 0) + 1
+      const name = order.menuTitle || 'Unknown'
+      const count = (itemCounts[name] || 0) + 1
+      itemCounts[name] = count
+      if (count > maxCount) maxCount = count
     }
 
-    const sortedItems = Object.entries(itemCounts).sort((a, b) => b[1] - a[1])
-    
-    let mostPopular = 'None'
-    if (sortedItems.length > 0) {
-      const topCount = sortedItems[0][1]
-      const topItems = sortedItems.filter(item => item[1] === topCount)
-      
-      if (topItems.length > 1) {
-        // Multiple items tied for most popular
-        mostPopular = topItems.map(item => item[0]).join(', ')
-      } else {
-        mostPopular = sortedItems[0][0]
-      }
-    }
+    // Handle tied food menu items
+    const popularItems = Object.keys(itemCounts).filter(name => itemCounts[name] === maxCount)
+    const mostPopular = popularItems.join(', ')
 
     return [
       { title: 'Total orders', count: totalOrders },
@@ -130,6 +113,24 @@
     return `${startDate} - ${endDate}`
   })
 
+  // Fetch orders & menu items whenever weekOffset changes
+  watch(weekOffset, async (newOffset) => {
+    isLoading.value = true
+    const weekStartDate = getWeekString(getWeekDates(newOffset)[0])
+
+    try {
+      await Promise.all([
+        orderStore.getAllOrders({ week_string: weekStartDate}),
+        menuStore.getAllMenuItems({ week_string: weekStartDate}),
+      ])
+    } catch (err) {
+      console.error('Failed to load week data:', err)
+      snackError('Failed to load orders for selected week')
+    } finally {
+      isLoading.value = false
+    }
+  }, { immediate: true })
+
   // Update handleExport function:
   function handleExport () {
     if (currentWeekOrders.value.length === 0) {
@@ -142,14 +143,9 @@
       let filename = 'FoodHub_OrderSummary'
 
       if (selectedDepartment.value !== 'All') {
-        // Clean department name for filename (remove special characters, replace spaces with underscores)
-        const deptName = selectedDepartment.value
-          .replace(/\s+-\s+/g, '_') // Replace " - " with "_"
-          .replace(/\s+/g, '_') // Replace spaces with "_"
-          .replace(/[^a-zA-Z0-9_]/g, '') // Remove special characters
-
-        filename = `FoodHub_${deptName}_OrderSummary`
-      }
+            const customName = selectedDepartment.value.replace(/[^a-zA-Z0-9]/g, '_')
+            filename = `FoodHub_${customName}_OrderSummary`
+          }
 
       if (exportFormat.value === 'pdf') {
         exportOrdersToPDF(
@@ -183,6 +179,11 @@
     }
   }
 
+  // Fetch staff data once on mount
+  onMounted(() => {
+    staffStore.getAllStaff()
+  })
+
 </script>
 
 <template>
@@ -208,7 +209,7 @@
         <v-col class="d-flex justify-start" cols="12" md="4" sm="6">
           <h1
             class="font-weight-bold text-display-medium"
-            style="letter-spacing: 0.5px; color: #D2451E !important;"
+            style="letter-spacing: 0.5px; color: #D2451E;"
           >
             Order summary
           </h1>
@@ -222,7 +223,7 @@
             hide-details
             :items="departments"
             label="Department"
-            style="max-width: 226px;"
+            style="max-width: 250px;"
             variant="outlined"
           />
 
@@ -232,7 +233,7 @@
           <v-menu>
             <template #activator="{ props }">
               <v-btn
-                class="text-capitalize font-weight-bold px-10 py-6"
+                class="text-capitalize font-weight-bold px-12 py-6"
                 color="#D2451E"
                 variant="flat"
                 v-bind="props"
@@ -282,7 +283,7 @@
             class="pa-5 border-0"
             color="white"
             elevation="0"
-            style="border: 1px solid #D2451E !important;"
+            style="border: 1px solid #D2451E;"
           >
             <div class="font-weight-medium mb-1" style="font-size: 20px;">
               {{ stat.title }}

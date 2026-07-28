@@ -119,8 +119,8 @@
   })
 
   // Maximum and Minimum dates for deadline date selection
-  const weekMin = computed(() => toLocalDateString(weekDates.value[0]))
-  const weekMax = computed(() => toLocalDateString(weekDates.value[4]))
+  const weekMin = computed(() => toLocalDateString(getWeekDates(0)[0]))
+  const weekMax = computed(() => toLocalDateString(getWeekDates(0)[4]))
 
   // Fetch the menu items for all the starting date to Friday
   watch(weekOffset, (newOffset) => {

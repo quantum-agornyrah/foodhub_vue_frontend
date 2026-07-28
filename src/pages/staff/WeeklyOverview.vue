@@ -1,17 +1,19 @@
 <script setup>
   import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
+
   import AppShell from '@/components/layout/AppShell.vue'
   import DayOrderCard from '@/components/staff/DayOrderCard.vue'
   import OrderProgressBar from '@/components/staff/OrderProgressBar.vue'
   import WeekSelectionSummary from '@/components/staff/WeekSelectionSummary.vue'
+  import SkeletonCard from '@/components/shared/SkeletonCard.vue'
+
   import { useAuth } from '@/composables/useAuth'
   import { useOrderDraft } from '@/composables/useOrderDraft'
   import { useWeekMenu } from '@/composables/useWeekMenu'
   import { useMenuStore } from '@/stores/menu.store'
   import { useOrderStore } from '@/stores/orders.store'
   import { getWeekString, parseLocalDate } from '@/utils/dateHelpers'
-  import SkeletonCard from '@/components/shared/SkeletonCard.vue'
 
   const router = useRouter()
 
@@ -32,58 +34,26 @@
   } = useOrderDraft()
 
   const pageLoading = ref(true)
+  let timer = null
 
-  // Fetch data and hydrate selections on mount
-  onMounted(async () => {
-    try {
-      const nextWeekMonday = getWeekString(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))
+  // Calculate next week date
+  const getNextWeekMondayDate = () => {
+    const d = new Date()
+    d.setDate(d.getDate() + 7)
+    return getWeekString(d)
+  }
 
-      // Fetch menu and user orders in parallel
-      await Promise.all([
-        fetchWeekMenu(nextWeekMonday),
-        orderStore.getMyOrders(user.value.id),
-      ])
+  const nextWeekStart = computed(() => getNextWeekMondayDate())
 
-      // Hydrate selections draft:
-      // Gather all valid menu dates
-      const availableDates = weekDays.value.map(d => d.date)
-      initDraft(nextWeekMonday, availableDates)
-
-      // Pull existing database selections
-      const myOrdersNextWeek = orderStore.myOrders.filter(
-        o => o.weekString === nextWeekMonday,
-      )
-      for (const order of myOrdersNextWeek) {
-        if (order.menuItemId) {
-          selectItem(order.date, order.menuItemId)
-        }
-      }
-
-      updateCountdown()
-      timer = setInterval(updateCountdown, 1000)
-      
-    } catch (error) {
-      console.error('Failed to load menu/order overview:', error)
-    } finally {
-      pageLoading.value = false
-    }
-  })
-
-  const nextWeekStart = computed(() => getWeekString(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)))
-
+  // Track deadline set for nextweek
   const deadlineIso = computed(() => menuStore.deadlineByWeek(nextWeekStart.value))
-  const deadlineLabel = computed(() => {
-    if (!deadlineIso.value) return 'No deadline set'
-    return new Date(deadlineIso.value).toLocaleString('en-US', {
-      weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-    })
-  })
 
   const isWeekDeadlinePassed = computed(() => {
     if (!deadlineIso.value) return false
     return new Date() > new Date(deadlineIso.value)
   })
 
+  // Check if next week's order is fully submitted
   const isCurrentWeekSubmitted = computed(() => {
     const nextOrders = orderStore.myOrders.filter(
       o => o.weekString === nextWeekStart.value,
@@ -92,17 +62,14 @@
     return nextOrders.every(o => o.status === 'submitted')
   })
 
-  // --- Countdown Timer Logic ---
+  // Countdown logic
   const countdown = ref({ days: 0, hours: 0, mins: 0, secs: 0 })
-  let timer = null
-  let pollTimer = null   // ← polling interval for deadline refresh (60s)
 
   function updateCountdown () {
     if (!deadlineIso.value) return
 
-    const now = new Date()
-    const end = new Date(deadlineIso.value)
-    const diff = end - now // ms remaining
+    // Calculate difference in time in milliseconds
+    const diff = new Date(deadlineIso.value) - new Date()
 
     if (diff <= 0) {
       countdown.value = { days: 0, hours: 0, mins: 0, secs: 0 }
@@ -119,7 +86,7 @@
     }
   }
 
-  // Revert auto-submitted orders back to 'pending' when HR extends a passed deadline
+  // Revert auto-submitted orders back to 'pending' if HR extends deadline
   async function revertExpiredOrders (weekString) {
     const ordersToRevert = orderStore.myOrders.filter(
       o => o.weekString === weekString && o.status === 'submitted',
@@ -127,7 +94,6 @@
     for (const order of ordersToRevert) {
       await orderStore.updateOrder(order.id, { ...order, status: 'pending' })
     }
-    // Refresh so UI reflects the reverted status immediately
     await orderStore.getMyOrders(user.value.id)
   }
 
@@ -138,13 +104,11 @@
     const wasPassed = new Date() > new Date(oldDeadline)
     const nowPassed = new Date() > new Date(newDeadline)
 
+    // If deadline was extended, restart the countdown timer and revert order statuses
     if (wasPassed && !nowPassed) {
-      // Deadline was extended into the future → restart the countdown timer
       if (timer) clearInterval(timer)
       updateCountdown()
       timer = setInterval(updateCountdown, 1000)
-
-      // Revert any auto-submitted orders back to pending so staff can edit again
       await revertExpiredOrders(nextWeekStart.value)
     }
   })
@@ -153,12 +117,12 @@
   const mappedWeekDays = computed(() => {
     return weekDays.value.map(d => {
       const parsedDate = parseLocalDate(d.date)
-      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
       const dayName = dayNames[parsedDate.getDay()]
-      const options = { month: 'short', day: 'numeric' }
+      const options = { month: 'long', day: 'numeric' }
       const label = parsedDate.toLocaleDateString('en-US', options)
 
-      // Lock the card ONLY if the deadline has actually passed
+      // Disable or lock card ONLY if the deadline has actually passed and order has been submitted
       const status = ((isWeekDeadlinePassed.value || isCurrentWeekSubmitted.value) && d.status === 'open') ? 'deadline_passed' : d.status
 
       return {
@@ -185,20 +149,18 @@
     }).length
   })
 
-  // Look up menu choices for a specific date
+  // Look up food menu items for a specific date
   function getMenuItemsForDate (dateString) {
     return weekMenu.value.filter(item => item.date === dateString)
   }
 
-  // Handler for custom radio selects
+  // Function for custom radio selections i.e date and food item
   function handleSelect ({ date, itemId }) {
     selectItem(date, itemId)
   }
 
-  // Action handlers
   async function handleSubmit () {
     await submitOrder()
-    // router.push('/my-order-history')
   }
 
   async function handleSaveDraft () {
@@ -206,7 +168,6 @@
     router.push('/my-order-history')
   }
 
-  // Smart back button fallback helper
   function goBack() {
     if (window.history.state && window.history.state.back) {
       router.back()
@@ -214,6 +175,41 @@
       router.push('/staff-dashboard')
     }
   }
+
+  // Fetch data on mount
+  onMounted(async () => {
+    try {
+      const nextWeekMonday = nextWeekStart.value
+
+      // Fetch menu and user orders in parallel
+      await Promise.all([
+        fetchWeekMenu(nextWeekMonday),
+        orderStore.getMyOrders(user.value.id),
+      ])
+
+      // Gather all valid menu dates
+      const availableDates = weekDays.value.map(d => d.date)
+      initDraft(nextWeekMonday, availableDates)
+
+      // Pull existing database selections
+      const myOrdersNextWeek = orderStore.myOrders.filter(
+        o => o.weekString === nextWeekMonday,
+      )
+      for (const order of myOrdersNextWeek) {
+        if (order.menuItemId) {
+          selectItem(order.date, order.menuItemId)
+        }
+      }
+
+      updateCountdown()
+      timer = setInterval(updateCountdown, 1000)
+      
+    } catch (error) {
+      console.error('Failed to load menu and order overview:', error)
+    } finally {
+      pageLoading.value = false
+    }
+  })
 
   // Clean up the timer when leaving the page
   onUnmounted(() => {
@@ -274,14 +270,13 @@
             </v-card>
 
             <v-card
-              v-if="deadlineIso && !isWeekDeadlinePassed && !isCurrentWeekSubmitted"
+              v-else-if="deadlineIso && !isWeekDeadlinePassed"
               class="px-4 py-3 d-flex align-center"
               elevation="0"
               style="background-color: #D2451E; color: white;"
               variant="flat"
             >
               <v-icon class="mr-3" color="white" size="24">mdi-calendar-clock</v-icon>
-
               <div class="font-weight-medium" style="font-size: 16px;">
                 Deadline in:
                 {{ countdown.days }}d :
@@ -302,8 +297,8 @@
             </v-card>
 
             <v-card
-              v-else-if="!deadlineIso"
-              class="font-weight-bold px-4 py-3"
+              v-else
+              class="font-weight-bold px-4 py-3 text-white"
               color="#D2451E"
               variant="flat"
             >
