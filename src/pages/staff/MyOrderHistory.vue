@@ -1,4 +1,14 @@
 <script setup>
+  // File-based routing meta definition
+  definePage({
+    name: 'MyOrderHistory',
+    path: '/my-order-history',
+    meta: {
+      requiresAuth: true,
+      roles: ['staff'],
+    },
+  })
+
   import { computed, onMounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
 

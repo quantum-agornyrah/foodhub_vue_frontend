@@ -1,4 +1,13 @@
 <script setup>
+  // File-based routing meta definition
+  definePage({
+    name: 'ForgotPassword',
+    path: '/forgot-password',
+    meta: {
+      requiresAuth: false,
+    },
+  })
+
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
   import loginBg from '@/assets/login-bg.jpg'
@@ -122,7 +131,7 @@
             elevation="0"
             rounded="pill"
             variant="flat"
-            @click="router.push('/')"
+            @click="router.push('/login')"
           >
             Back to Sign In
           </v-btn>

@@ -1,6 +1,17 @@
 <script setup>
+  // File-based routing meta definition
+  definePage({
+    name: 'MenuManager',
+    path: '/menu-manager',
+    meta: {
+      requiresAuth: true,
+      roles: ['hr'],
+    },
+  })
+
   import { computed, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
+
   import AppShell from '@/components/layout/AppShell.vue'
   import FoodFormDialog from '@/components/menu/FoodFormDialog.vue'
   import BulkFoodFormDialog from '@/components/menu/BulkFoodFormDialog.vue'
@@ -8,10 +19,11 @@
   import WeekStrip from '@/components/menu/WeekStrip.vue'
   import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
   import WeekPicker from '@/components/shared/WeekPicker.vue'
+  import SkeletonCard from '../../components/shared/SkeletonCard.vue'
+
   import { useSnackbar } from '@/composables/useSnackbar.js'
   import { useWeekMenu } from '@/composables/useWeekMenu.js'
   import { formatDate, getWeekDates, getWeekString, parseLocalDate } from '@/utils/dateHelpers.js'
-  import SkeletonCard from '../../components/shared/SkeletonCard.vue'
 
   const router = useRouter()
   const route = useRoute()

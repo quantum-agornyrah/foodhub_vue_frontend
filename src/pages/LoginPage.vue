@@ -1,4 +1,13 @@
 <script setup>
+  // File-based routing meta definition
+  definePage({
+    name: 'LoginPage',
+    path: '/login',
+    meta: {
+      requiresAuth: false,
+    },
+  })
+
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
   import loginBg from '@/assets/login-bg.jpg'

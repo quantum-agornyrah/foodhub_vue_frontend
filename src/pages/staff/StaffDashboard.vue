@@ -1,4 +1,14 @@
 <script setup>
+  // File-based routing meta definition
+  definePage({
+    name: 'StaffDashboard',
+    path: '/staff-dashboard',
+    meta: {
+      requiresAuth: true,
+      roles: ['staff'],
+    },
+  })
+
   import { storeToRefs } from 'pinia'
   import { computed, onMounted, ref } from 'vue'
   import { useRouter } from 'vue-router'

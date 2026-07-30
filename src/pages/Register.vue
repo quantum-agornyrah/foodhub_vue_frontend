@@ -1,4 +1,13 @@
 <script setup>
+  // File-based routing meta definition
+  definePage({
+    name: 'Register',
+    path: '/register',
+    meta: {
+      requiresAuth: false,
+    },
+  })
+
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
   import loginBg from '@/assets/login-bg.jpg'
@@ -88,7 +97,7 @@
         successMessage.value = 'Registration successful! Redirecting to login...'
         setTimeout(() => {
           // 4. Redirect to the home or login page after 2 seconds
-          router.push('/')
+          router.push('/login')
         }, 2000)
       } else {
         errorMessage.value = 'Registration failed. Please try again.'
