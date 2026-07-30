@@ -2,10 +2,6 @@
   import { useRouter } from 'vue-router'
   import loginBg from '@/assets/login-bg.jpg'
 
-  function goHome() {
-    router.push('/')
-  }
-
 </script>
 
 <template>
@@ -18,8 +14,8 @@
       width="100%"
     >
       <!-- Icon -->
-      <div class="text-center mb-4">
-        <v-icon color="#D2451E" size="80">mdi-compass-off-outline</v-icon>
+      <div class="text-center mb-3">
+        <v-icon color="#D2451E" size="60">mdi-compass-off-outline</v-icon>
       </div>
       <!-- Title -->
       <h1 class="font-weight-bold text-center mb-4">404</h1>
@@ -32,7 +28,7 @@
         elevation="0"
         rounded="pill"
         variant="flat"
-        @click="() => $router.push('/')"
+        @click="() => $router.push('/login')"
       >
         Back to Home
       </v-btn>

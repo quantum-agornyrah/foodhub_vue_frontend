@@ -1,4 +1,14 @@
 <script setup>
+  // File-based routing meta definition
+  definePage({
+    name: 'OrderSummary',
+    path: '/order-summary',
+    meta: {
+      requiresAuth: true,
+      roles: ['hr'],
+    },
+  })
+
   import { storeToRefs } from 'pinia'
   import { computed, onMounted, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'

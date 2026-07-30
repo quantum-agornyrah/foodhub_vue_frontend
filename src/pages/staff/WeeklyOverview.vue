@@ -1,4 +1,14 @@
 <script setup>
+  // File-based routing meta definition
+  definePage({
+    name: 'WeeklyOverview',
+    path: '/weekly-overview',
+    meta: {
+      requiresAuth: true,
+      roles: ['staff'],
+    },
+  })
+
   import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
 
