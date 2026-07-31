@@ -53,9 +53,9 @@
       // 3. Redirect based on role using getters from auth store
       if (success) {
         if (authStore.isHR) {
-          router.push('/hr-dashboard')
+          router.push('/hr')
         } else {
-          router.push('/staff-dashboard')
+          router.push('/staff')
         }
       } else {
         errorMessage.value = 'Invalid credentials. Please try again.'

@@ -45,23 +45,39 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
-    'HrDashboard': RouteRecordInfo<
-      'HrDashboard',
-      '/hr-dashboard',
+    '/hr': RouteRecordInfo<
+      '/hr',
+      '/hr',
+      Record<never, never>,
+      Record<never, never>,
+      | '/hr/'
+      | '/hr/menu'
+      | '/hr/orders'
+    >,
+    '/hr/': RouteRecordInfo<
+      '/hr/',
+      '/hr',
       Record<never, never>,
       Record<never, never>,
       | never
     >,
-    'MenuManager': RouteRecordInfo<
-      'MenuManager',
-      '/menu-manager',
+    '/hr/menu': RouteRecordInfo<
+      '/hr/menu',
+      '/hr/menu',
       Record<never, never>,
       Record<never, never>,
       | never
     >,
-    'OrderSummary': RouteRecordInfo<
-      'OrderSummary',
-      '/order-summary',
+    '/hr/orders': RouteRecordInfo<
+      '/hr/orders',
+      '/hr/orders',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    'Home': RouteRecordInfo<
+      'Home',
+      '/login',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -80,23 +96,32 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
-    'MyOrderHistory': RouteRecordInfo<
-      'MyOrderHistory',
-      '/my-order-history',
+    '/staff': RouteRecordInfo<
+      '/staff',
+      '/staff',
+      Record<never, never>,
+      Record<never, never>,
+      | '/staff/'
+      | '/staff/history'
+      | '/staff/overview'
+    >,
+    '/staff/': RouteRecordInfo<
+      '/staff/',
+      '/staff',
       Record<never, never>,
       Record<never, never>,
       | never
     >,
-    'StaffDashboard': RouteRecordInfo<
-      'StaffDashboard',
-      '/staff-dashboard',
+    '/staff/history': RouteRecordInfo<
+      '/staff/history',
+      '/staff/history',
       Record<never, never>,
       Record<never, never>,
       | never
     >,
-    'WeeklyOverview': RouteRecordInfo<
-      'WeeklyOverview',
-      '/weekly-overview',
+    '/staff/overview': RouteRecordInfo<
+      '/staff/overview',
+      '/staff/overview',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -122,7 +147,7 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | 'path'
     }
-    'src/pages/ForgotPassword.vue': {
+    'src/pages/forgot-password.vue': {
       routes:
         | 'ForgotPassword'
       views:
@@ -130,31 +155,50 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
-    'src/pages/hr/HrDashboard.vue': {
+    'src/pages/hr.vue': {
       routes:
-        | 'HrDashboard'
+        | '/hr'
+        | '/hr/'
+        | '/hr/menu'
+        | '/hr/orders'
+      views:
+        | 'default'
+      pathParamNames:
+        | never
+    }
+    'src/pages/hr/index.vue': {
+      routes:
+        | '/hr/'
       views:
         | never
       pathParamNames:
         | never
     }
-    'src/pages/hr/MenuManager.vue': {
+    'src/pages/hr/menu.vue': {
       routes:
-        | 'MenuManager'
+        | '/hr/menu'
       views:
         | never
       pathParamNames:
         | never
     }
-    'src/pages/hr/OrderSummary.vue': {
+    'src/pages/hr/orders.vue': {
       routes:
-        | 'OrderSummary'
+        | '/hr/orders'
       views:
         | never
       pathParamNames:
         | never
     }
-    'src/pages/LoginPage.vue': {
+    'src/pages/index.vue': {
+      routes:
+        | 'Home'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/login.vue': {
       routes:
         | 'LoginPage'
       views:
@@ -162,7 +206,7 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
-    'src/pages/Register.vue': {
+    'src/pages/register.vue': {
       routes:
         | 'Register'
       views:
@@ -170,25 +214,36 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
-    'src/pages/staff/MyOrderHistory.vue': {
+    'src/pages/staff.vue': {
       routes:
-        | 'MyOrderHistory'
+        | '/staff'
+        | '/staff/'
+        | '/staff/history'
+        | '/staff/overview'
+      views:
+        | 'default'
+      pathParamNames:
+        | never
+    }
+    'src/pages/staff/index.vue': {
+      routes:
+        | '/staff/'
       views:
         | never
       pathParamNames:
         | never
     }
-    'src/pages/staff/StaffDashboard.vue': {
+    'src/pages/staff/history.vue': {
       routes:
-        | 'StaffDashboard'
+        | '/staff/history'
       views:
         | never
       pathParamNames:
         | never
     }
-    'src/pages/staff/WeeklyOverview.vue': {
+    'src/pages/staff/overview.vue': {
       routes:
-        | 'WeeklyOverview'
+        | '/staff/overview'
       views:
         | never
       pathParamNames:

@@ -19,21 +19,21 @@
       <v-list-item
         prepend-icon="mdi-view-dashboard-outline"
         title="Dashboard"
-        to="/staff-dashboard"
+        to="/staff"
         active-class="bg-primary-light text-primary font-weight-bold"
       />
 
       <v-list-item
         prepend-icon="mdi-calendar-check-outline"
         title="Order this week"
-        to="/weekly-overview"
+        to="/staff/overview"
         active-class="bg-primary-light text-primary font-weight-bold"
       />
 
       <v-list-item
         prepend-icon="mdi-history"
         title="My history"
-        to="/my-order-history"
+        to="/staff/history"
         active-class="bg-primary-light text-primary font-weight-bold"
       />
 

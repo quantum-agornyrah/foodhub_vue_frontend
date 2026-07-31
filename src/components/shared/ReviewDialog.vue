@@ -14,7 +14,7 @@
     // Order details prop
     order: {
       type: Object,
-      defaul: () => null,
+      default: () => null,
     },
     
     // Read or Write ability prop - True for HR
@@ -58,7 +58,7 @@
   // Function to submit review
   function submit () {
     // 1. Prevent any error incase orders turn out to be null
-    if (!props.orders) return
+    if (!props.order) return
 
     // 2. Execute the event 
     emit('submit-review', { 

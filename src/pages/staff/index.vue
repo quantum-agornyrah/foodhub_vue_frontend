@@ -1,19 +1,8 @@
 <script setup>
-  // File-based routing meta definition
-  definePage({
-    name: 'StaffDashboard',
-    path: '/staff-dashboard',
-    meta: {
-      requiresAuth: true,
-      roles: ['staff'],
-    },
-  })
-
   import { storeToRefs } from 'pinia'
   import { computed, onMounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
 
-  import AppShell from '@/components/layout/AppShell.vue'
   import DeadlineAlert from '@/components/staff/DeadlineAlert.vue'
   import SkeletonCard from '@/components/shared/SkeletonCard.vue'
   import PreviousWeekCard from '@/components/staff/PreviousWeekCard.vue'
@@ -219,160 +208,158 @@
 </script>
 
 <template>
-  <AppShell>
-    <div style="max-width: 1400px; margin: 0 auto; padding: 0 16px;">
-      <!-- Loading State -->
-      <v-row v-if="isLoading">
-        <v-col 
-          v-for="i in 3" :key="i" 
-          cols="12" 
-          md="4" 
-          sm="12"
-        >
-          <SkeletonCard />
-        </v-col>
-      </v-row>
+  <div style="max-width: 1400px; margin: 0 auto; padding: 0 16px;">
+    <!-- Loading State -->
+    <v-row v-if="isLoading">
+      <v-col 
+        v-for="i in 3" :key="i" 
+        cols="12" 
+        md="4" 
+        sm="12"
+      >
+        <SkeletonCard />
+      </v-col>
+    </v-row>
 
-      <div v-else class="mb-10">
-        <!-- Greeting Header -->
-        <div class="mb-6">
-          <h1 class="font-weight-bold text-display-medium" style="color: #1E1E1E;">
-            {{ greeting }}
-          </h1>
+    <div v-else class="mb-10">
+      <!-- Greeting Header -->
+      <div class="mb-6">
+        <h1 class="font-weight-bold text-display-medium" style="color: #1E1E1E;">
+          {{ greeting }}
+        </h1>
 
-          <div class="font-weight-medium mt-n6">
-            {{ dateSubtitle }}
-          </div>
-        </div>
-
-        <v-divider class="border-opacity-25 my-6" />
-
-        <!-- Section 1: Dynamic Selections -->
-        <div class="mb-8">
-          <h2 class="font-weight-bold mb-4">
-            {{ sectionTitle }}
-          </h2>
-
-          <v-row class="ma-0 ga-3 d-flex flex-wrap justify-space-between">
-            <v-col
-              v-for="day in thisWeekSummary"
-              :key="day.dayName"
-              class="pa-0 flex-grow-1 d-flex flex-column"
-              cols="12"
-              sm="6"
-              md="4"
-              lg="2"
-            >
-              <v-card
-                class="pa-0 rounded-lg overflow-hidden flex-grow-1 d-flex flex-column"
-                elevation="0"
-                :style="day.style"
-              >
-                <!-- Food Image (top portion) -->
-                <div class="clickable-image flex-shrink-0" @click="router.push('/weekly-overview')">
-                  <v-img
-                    v-if="day.imageUrl"
-                    cover
-                    height="200"
-                    :src="day.imageUrl"
-                    loading="lazy"
-                  >
-                    <template #error>
-                      <div class="d-flex align-center justify-center" style="height: 200px; background-color: #F5F2EC;">
-                        <v-icon color="#D2451E" size="80">mdi-food</v-icon>
-                      </div>
-                    </template>
-                  </v-img>
-                  
-                  <div
-                    v-else
-                    class="d-flex align-center justify-center flex-shrink-0 clickable-image"
-                    style="height: 200px; background-color: #F5F2EC;"
-                  >
-                    <v-icon color="#D2451E" size="80">mdi-food</v-icon>
-                  </div>
-                </div>
-
-                <!-- Card Content (Stretches to fill remaining space) -->
-                <div class="pa-3 d-flex flex-column flex-grow-1">
-                  <div class="font-weight-bold mb-1" style="color: #1E1E1E; font-size: 20px;">
-                    {{ day.dayName }}
-                  </div>
-
-                  <div class="font-weight-bold text-truncate mb-1" style="color: #1E1E1E; font-size: 20px;">
-                    {{ day.selection }}
-                  </div>
-
-                  <div
-                    v-if="day.description"
-                    class="font-weight-medium mb-1 text-grey-darken-2"
-                  >
-                    {{ day.description }}
-                  </div>
-                </div>
-              </v-card>
-            </v-col>
-          </v-row>
-        </div>
-
-        <v-divider class="border-opacity-25 my-6" />
-
-        <!-- Deadline Notification Banner -->
-        <DeadlineAlert
-          v-if="!isNextWeekSubmitted && nextWeekDeadlineIso"
-          :deadline-iso="nextWeekDeadlineIso"
-          to="/weekly-overview"
-        />
-
-        <v-divider class="border-opacity-25 my-6" />
-
-        <!-- Section 2: Recent Order History -->
-        <div>
-          <div class="d-flex flex-column flex-sm-row justify-space-between align-sm-center ga-3 mb-4">
-            <h2 class="font-weight-bold mb-4" style="color: #1E1E1E;">
-              Recent Order History
-            </h2>
-
-            <v-btn
-              color="#D2451E"
-              prepend-icon="mdi-history"
-              variant="flat"
-              class="text-capitalize font-weight-bold px-8 py-5"
-              @click="router.push('/my-order-history')"
-            >
-             View All History
-            </v-btn>
-          </div>
-
-          <div v-if="recentPreviousWeeks.length > 0">
-            <PreviousWeekCard
-              v-for="week in recentPreviousWeeks"
-              :key="week.weekStart"
-              :status="week.status"
-              :subtitle="week.subtitle"
-              :title="week.title"
-            />
-          </div>
-
-          <!-- Empty State -->
-          <v-card
-            v-else
-            class="pa-8 rounded-lg text-center"
-            style="border: 1px dashed #BDBDBD;"
-            variant="flat"
-          >
-            <v-icon class="mb-3" color="#1E1E1E" size="48">
-              mdi-history
-            </v-icon>
-
-            <div class="font-weight-medium" style="color: #1E1E1E; font-size: 20px;">
-              No recent order history found.
-            </div>
-          </v-card>
+        <div class="font-weight-medium mt-n6">
+          {{ dateSubtitle }}
         </div>
       </div>
+
+      <v-divider class="border-opacity-25 my-6" />
+
+      <!-- Section 1: Dynamic Selections -->
+      <div class="mb-8">
+        <h2 class="font-weight-bold mb-4">
+          {{ sectionTitle }}
+        </h2>
+
+        <v-row class="ma-0 ga-3 d-flex flex-wrap justify-space-between">
+          <v-col
+            v-for="day in thisWeekSummary"
+            :key="day.dayName"
+            class="pa-0 flex-grow-1 d-flex flex-column"
+            cols="12"
+            sm="6"
+            md="4"
+            lg="2"
+          >
+            <v-card
+              class="pa-0 rounded-lg overflow-hidden flex-grow-1 d-flex flex-column"
+              elevation="0"
+              :style="day.style"
+            >
+              <!-- Food Image (top portion) -->
+              <div class="clickable-image flex-shrink-0" @click="router.push('/staff/overview')">
+                <v-img
+                  v-if="day.imageUrl"
+                  cover
+                  height="200"
+                  :src="day.imageUrl"
+                  loading="lazy"
+                >
+                  <template #error>
+                    <div class="d-flex align-center justify-center" style="height: 200px; background-color: #F5F2EC;">
+                      <v-icon color="#D2451E" size="80">mdi-food</v-icon>
+                    </div>
+                  </template>
+                </v-img>
+                
+                <div
+                  v-else
+                  class="d-flex align-center justify-center flex-shrink-0 clickable-image"
+                  style="height: 200px; background-color: #F5F2EC;"
+                >
+                  <v-icon color="#D2451E" size="80">mdi-food</v-icon>
+                </div>
+              </div>
+
+              <!-- Card Content (Stretches to fill remaining space) -->
+              <div class="pa-3 d-flex flex-column flex-grow-1">
+                <div class="font-weight-bold mb-1" style="color: #1E1E1E; font-size: 20px;">
+                  {{ day.dayName }}
+                </div>
+
+                <div class="font-weight-bold text-truncate mb-1" style="color: #1E1E1E; font-size: 20px;">
+                  {{ day.selection }}
+                </div>
+
+                <div
+                  v-if="day.description"
+                  class="font-weight-medium mb-1 text-grey-darken-2"
+                >
+                  {{ day.description }}
+                </div>
+              </div>
+            </v-card>
+          </v-col>
+        </v-row>
+      </div>
+
+      <v-divider class="border-opacity-25 my-6" />
+
+      <!-- Deadline Notification Banner -->
+      <DeadlineAlert
+        v-if="!isNextWeekSubmitted && nextWeekDeadlineIso"
+        :deadline-iso="nextWeekDeadlineIso"
+        to="/staff/overview"
+      />
+
+      <v-divider class="border-opacity-25 my-6" />
+
+      <!-- Section 2: Recent Order History -->
+      <div>
+        <div class="d-flex flex-column flex-sm-row justify-space-between align-sm-center ga-3 mb-4">
+          <h2 class="font-weight-bold mb-4" style="color: #1E1E1E;">
+            Recent Order History
+          </h2>
+
+          <v-btn
+            color="#D2451E"
+            prepend-icon="mdi-history"
+            variant="flat"
+            class="text-capitalize font-weight-bold px-8 py-5"
+            @click="router.push('/staff/history')"
+          >
+            View All History
+          </v-btn>
+        </div>
+
+        <div v-if="recentPreviousWeeks.length > 0">
+          <PreviousWeekCard
+            v-for="week in recentPreviousWeeks"
+            :key="week.weekStart"
+            :status="week.status"
+            :subtitle="week.subtitle"
+            :title="week.title"
+          />
+        </div>
+
+        <!-- Empty State -->
+        <v-card
+          v-else
+          class="pa-8 rounded-lg text-center"
+          style="border: 1px dashed #BDBDBD;"
+          variant="flat"
+        >
+          <v-icon class="mb-3" color="#1E1E1E" size="48">
+            mdi-history
+          </v-icon>
+
+          <div class="font-weight-medium" style="color: #1E1E1E; font-size: 20px;">
+            No recent order history found.
+          </div>
+        </v-card>
+      </div>
     </div>
-  </AppShell>
+  </div>
 </template>
 
 <style scoped> 

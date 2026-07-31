@@ -1,18 +1,7 @@
 <script setup>
-  // File-based routing meta definition
-  definePage({
-    name: 'WeeklyOverview',
-    path: '/weekly-overview',
-    meta: {
-      requiresAuth: true,
-      roles: ['staff'],
-    },
-  })
-
   import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
 
-  import AppShell from '@/components/layout/AppShell.vue'
   import DayOrderCard from '@/components/staff/DayOrderCard.vue'
   import OrderProgressBar from '@/components/staff/OrderProgressBar.vue'
   import WeekSelectionSummary from '@/components/staff/WeekSelectionSummary.vue'
@@ -175,14 +164,14 @@
 
   async function handleSaveDraft () {
     await saveDraft()
-    router.push('/my-order-history')
+    router.push('/staff/history')
   }
 
   function goBack() {
     if (window.history.state && window.history.state.back) {
       router.back()
     } else {
-      router.push('/staff-dashboard')
+      router.push('/staff')
     }
   }
 
@@ -228,140 +217,138 @@
 </script>
 
 <template>
-  <AppShell>
-    <div style="max-width: 1400px; margin: 0 auto; padding: 0 16px;">
-      
-      <!-- Loading State -->
-      <v-row v-if="pageLoading || isLoading">
-        <v-col
-          v-for="i in 3"
-          :key="i"
-          cols="12"
-          sm="12"
-          md="4"
-        >
-          <SkeletonCard />
+  <div style="max-width: 1400px; margin: 0 auto; padding: 0 16px;">
+    
+    <!-- Loading State -->
+    <v-row v-if="pageLoading || isLoading">
+      <v-col
+        v-for="i in 3"
+        :key="i"
+        cols="12"
+        sm="12"
+        md="4"
+      >
+        <SkeletonCard />
+      </v-col>
+    </v-row>
+
+    <div v-else>
+      <!-- Back button -->
+      <v-row class="d-flex align-center justify-space-between">
+        <v-col class="d-flex justify-start align-center" cols="12" sm="6">
+          <v-btn
+            prepend-icon="mdi-arrow-left"
+            variant="flat"
+            color="#D2451E"
+            class="mr-2 mt-4"
+            @click="goBack"
+          > 
+          Go back 
+          </v-btn>
         </v-col>
       </v-row>
 
-      <div v-else>
-        <!-- Back button -->
-        <v-row class="d-flex align-center justify-space-between">
-          <v-col class="d-flex justify-start align-center" cols="12" sm="6">
-            <v-btn
-              prepend-icon="mdi-arrow-left"
-              variant="flat"
-              color="#D2451E"
-              class="mr-2 mt-4"
-              @click="goBack"
-            > 
-            Go back 
-            </v-btn>
-          </v-col>
-        </v-row>
+      <!-- Header -->
+      <v-row class="d-flex mb-4 mt-n1 align-center justify-space-between">
+        <v-col class="d-flex justify-start align-center" cols="12" sm="6">
+          <h1 class="font-weight-bold text-display-medium" style="color: #1E1E1E;">
+            Order for Next Week
+          </h1>
+        </v-col>
 
-        <!-- Header -->
-        <v-row class="d-flex mb-4 mt-n1 align-center justify-space-between">
-          <v-col class="d-flex justify-start align-center" cols="12" sm="6">
-            <h1 class="font-weight-bold text-display-medium" style="color: #1E1E1E;">
-              Order for Next Week
-            </h1>
-          </v-col>
-
-          <v-col class="d-flex flex-column ga-3 justify-sm-end align-end" cols="12" sm="6">
-            <v-card
-              v-if="isCurrentWeekSubmitted"
-              class="font-weight-bold px-6 py-3 text-white"
-              color="success"
-              variant="flat"
-            >
-              <v-icon class="mr-2" left>mdi-check-circle</v-icon>
-              Order Submitted
-            </v-card>
-
-            <v-card
-              v-else-if="deadlineIso && !isWeekDeadlinePassed"
-              class="px-4 py-3 d-flex align-center"
-              elevation="0"
-              style="background-color: #D2451E; color: white;"
-              variant="flat"
-            >
-              <v-icon class="mr-3" color="white" size="24">mdi-calendar-clock</v-icon>
-              <div class="font-weight-medium" style="font-size: 16px;">
-                Deadline in:
-                {{ countdown.days }}d :
-                {{ String(countdown.hours).padStart(2, '0') }}h :
-                {{ String(countdown.mins).padStart(2, '0') }}m :
-                {{ String(countdown.secs).padStart(2, '0') }}s
-              </div>
-            </v-card>
-
-            <v-card
-              v-else-if="deadlineIso && isWeekDeadlinePassed"
-              class="font-weight-bold px-6 py-3"
-              color="#D2451E"
-              variant="flat"
-            >
-              <v-icon class="mr-2" left>mdi-alert-circle</v-icon>
-              Deadline Passed
-            </v-card>
-
-            <v-card
-              v-else
-              class="font-weight-bold px-4 py-3 text-white"
-              color="#D2451E"
-              variant="flat"
-            >
-              No deadline set
-            </v-card>
-          </v-col>
-        </v-row>
-
-        <!-- Progress Indicator -->
-        <OrderProgressBar
-          :selected-count="selectedCount"
-          :total-count="activeDaysCount"
-        />
-
-        <!-- Weekly Columns Grid -->
-        <v-row class="mb-8">
-          <v-col
-            v-for="day in mappedWeekDays"
-            :key="day.date"
-            cols="12"
-            md="4"
-            sm="6"
+        <v-col class="d-flex flex-column ga-3 justify-sm-end align-end" cols="12" sm="6">
+          <v-card
+            v-if="isCurrentWeekSubmitted"
+            class="font-weight-bold px-6 py-3 text-white"
+            color="success"
+            variant="flat"
           >
-            <DayOrderCard
-              :date="day.label"
-              :date-string="day.date"
-              :day="day.dayName"
-              :items="getMenuItemsForDate(day.date)"
-              :selected-item-id="selections[day.date]"
-              :status="day.status"
-              @select="handleSelect"
-            />
-          </v-col>
+            <v-icon class="mr-2" left>mdi-check-circle</v-icon>
+            Order Submitted
+          </v-card>
 
-          <v-col class="mr-auto" cols="12" md="4" sm="6">
-            <WeekSelectionSummary
-              :is-deadline-passed="isWeekDeadlinePassed"
-              :is-submitted="isCurrentWeekSubmitted"
-              :is-saving-draft="isSavingDraft"
-              :is-submitting="isSubmitting"
-              :is-submitting-all="isSubmittingAll"
-              :menu-items="weekMenu"
-              :selections="selections"
-              :week-days="mappedWeekDays"
-              @save-draft="handleSaveDraft"
-              @submit="handleSubmit"
-            />
-          </v-col>
+          <v-card
+            v-else-if="deadlineIso && !isWeekDeadlinePassed"
+            class="px-4 py-3 d-flex align-center"
+            elevation="0"
+            style="background-color: #D2451E; color: white;"
+            variant="flat"
+          >
+            <v-icon class="mr-3" color="white" size="24">mdi-calendar-clock</v-icon>
+            <div class="font-weight-medium" style="font-size: 16px;">
+              Deadline in:
+              {{ countdown.days }}d :
+              {{ String(countdown.hours).padStart(2, '0') }}h :
+              {{ String(countdown.mins).padStart(2, '0') }}m :
+              {{ String(countdown.secs).padStart(2, '0') }}s
+            </div>
+          </v-card>
 
-        </v-row>
-      </div>
+          <v-card
+            v-else-if="deadlineIso && isWeekDeadlinePassed"
+            class="font-weight-bold px-6 py-3"
+            color="#D2451E"
+            variant="flat"
+          >
+            <v-icon class="mr-2" left>mdi-alert-circle</v-icon>
+            Deadline Passed
+          </v-card>
+
+          <v-card
+            v-else
+            class="font-weight-bold px-4 py-3 text-white"
+            color="#D2451E"
+            variant="flat"
+          >
+            No deadline set
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- Progress Indicator -->
+      <OrderProgressBar
+        :selected-count="selectedCount"
+        :total-count="activeDaysCount"
+      />
+
+      <!-- Weekly Columns Grid -->
+      <v-row class="mb-8">
+        <v-col
+          v-for="day in mappedWeekDays"
+          :key="day.date"
+          cols="12"
+          md="4"
+          sm="6"
+        >
+          <DayOrderCard
+            :date="day.label"
+            :date-string="day.date"
+            :day="day.dayName"
+            :items="getMenuItemsForDate(day.date)"
+            :selected-item-id="selections[day.date]"
+            :status="day.status"
+            @select="handleSelect"
+          />
+        </v-col>
+
+        <v-col class="mr-auto" cols="12" md="4" sm="6">
+          <WeekSelectionSummary
+            :is-deadline-passed="isWeekDeadlinePassed"
+            :is-submitted="isCurrentWeekSubmitted"
+            :is-saving-draft="isSavingDraft"
+            :is-submitting="isSubmitting"
+            :is-submitting-all="isSubmittingAll"
+            :menu-items="weekMenu"
+            :selections="selections"
+            :week-days="mappedWeekDays"
+            @save-draft="handleSaveDraft"
+            @submit="handleSubmit"
+          />
+        </v-col>
+
+      </v-row>
     </div>
-  </AppShell>
+  </div>
 </template>
 
 <style scoped>

@@ -18,21 +18,21 @@
       <v-list-item
         prepend-icon="mdi-view-dashboard-outline"
         title="Dashboard"
-        to="/hr-dashboard"
+        to="/hr"
         active-class="bg-primary-light text-primary font-weight-bold"
       />
 
       <v-list-item
         prepend-icon="mdi-silverware-fork-knife"
         title="Menu manager"
-        to="/menu-manager"
+        to="/hr/menu"
         active-class="bg-primary-light text-primary font-weight-bold"
       />
 
       <v-list-item
         prepend-icon="mdi-clipboard-list-outline"
         title="Orders"
-        to="/order-summary"
+        to="/hr/orders"
         active-class="bg-primary-light text-primary font-weight-bold"
       />
 

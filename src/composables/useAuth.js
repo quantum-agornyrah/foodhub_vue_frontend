@@ -22,8 +22,8 @@ export function useAuth () {
 
   // Map each role to its home route
   const ROLE_HOME = {
-    [ROLES.HR]: '/hr-dashboard',
-    [ROLES.STAFF]: '/staff-dashboard',
+    [ROLES.HR]: '/hr',
+    [ROLES.STAFF]: '/staff',
   }
 
   // Redirection navigation logic for each user role

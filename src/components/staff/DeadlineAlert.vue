@@ -16,7 +16,7 @@
     // Route prop
     to: {
       type: String,
-      default: '/weekly-overview',
+      default: '/staff/overview',
     },
   })
 
