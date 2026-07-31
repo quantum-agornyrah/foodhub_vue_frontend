@@ -24,7 +24,7 @@
     // Route prop
     to: {
       type: String,
-      default: '/my-order-history',
+      default: '/staff/history',
     },
   })
 

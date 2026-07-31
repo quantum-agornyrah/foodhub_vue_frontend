@@ -15,7 +15,7 @@ export function useWeekMenu () {
 
   // 2. Assign an ISO date string ("YYYY-MM-DD") the user is currently viewing
   // Currently selected day from the ShortWeekLabel tab
-  const activeDay = ref(null)
+  const activeDay = ref('')
 
   // 3. Assign the Monday ISO date string of the week currently loaded
   // Currently loaded week from the weekLabel component

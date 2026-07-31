@@ -2,8 +2,8 @@
   import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useDisplay } from 'vuetify'
-  import { useAuthStore } from '../../stores/auth.store.js'
-  import { useMenuStore } from '../../stores/menu.store.js'
+  import { useAuthStore } from '@/stores/auth.store.js'
+  import { useMenuStore } from '@/stores/menu.store.js'
   import HrNav from './HrNav.vue'
   import StaffNav from './StaffNav.vue'
   

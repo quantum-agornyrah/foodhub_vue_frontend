@@ -1,18 +1,7 @@
 <script setup>
-  // File-based routing meta definition
-  definePage({
-    name: 'MyOrderHistory',
-    path: '/my-order-history',
-    meta: {
-      requiresAuth: true,
-      roles: ['staff'],
-    },
-  })
-
   import { computed, onMounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
 
-  import AppShell from '@/components/layout/AppShell.vue'
   import ReviewDialog from '@/components/shared/ReviewDialog.vue'
 
   import { useAuth } from '@/composables/useAuth'
@@ -53,7 +42,7 @@
     if (window.history.state && window.history.state.back) {
       router.back()
     } else {
-      router.push('/staff-dashboard')
+      router.push('/staff')
     }
   }
 
@@ -281,180 +270,178 @@
 
 </script>
 <template>
-  <AppShell>
-    <div style="max-width: 1400px; margin: 0 auto; padding: 0 16px;">
-      <!-- Loading State -->
-      <div v-if="isLoading" class="d-flex flex-column ga-4">
-        <SkeletonCard v-for="i in 3" :key="i"/>
-      </div>
+  <div style="max-width: 1400px; margin: 0 auto; padding: 0 16px;">
+    <!-- Loading State -->
+    <div v-if="isLoading" class="d-flex flex-column ga-4">
+      <SkeletonCard v-for="i in 3" :key="i"/>
+    </div>
 
-      <div v-else>
-        <!-- Back button -->
-        <v-row class="d-flex align-center justify-space-between">
-          <v-col class="d-flex justify-start align-center" cols="12" sm="6">
-            <v-btn
-              prepend-icon="mdi-arrow-left"
-              variant="flat"
-              color="#D2451E"
-              class="mr-2 mt-4"
-              @click="goBack"
-            > 
-            Go back 
-            </v-btn>
-          </v-col>
-        </v-row>
+    <div v-else>
+      <!-- Back button -->
+      <v-row class="d-flex align-center justify-space-between">
+        <v-col class="d-flex justify-start align-center" cols="12" sm="6">
+          <v-btn
+            prepend-icon="mdi-arrow-left"
+            variant="flat"
+            color="#D2451E"
+            class="mr-2 mt-4"
+            @click="goBack"
+          > 
+          Go back 
+          </v-btn>
+        </v-col>
+      </v-row>
 
-        <!-- Header -->
-        <v-row class="d-flex mb-4 mt-n1 align-center justify-space-between">
-          <v-col class="d-flex justify-start align-center" cols="12" sm="6">
-            <h1 class="font-weight-bold text-display-medium" style="color: #1E1E1E;">
-              My order history
-            </h1>
-          </v-col>
+      <!-- Header -->
+      <v-row class="d-flex mb-4 mt-n1 align-center justify-space-between">
+        <v-col class="d-flex justify-start align-center" cols="12" sm="6">
+          <h1 class="font-weight-bold text-display-medium" style="color: #1E1E1E;">
+            My order history
+          </h1>
+        </v-col>
 
-          <v-col class="d-flex justify-sm-end align-center ga-3" cols="12" sm="6">
-            <!-- Month Filter Dropdown -->
-            <v-select
-              v-model="selectedMonth"
+        <v-col class="d-flex justify-sm-end align-center ga-3" cols="12" sm="6">
+          <!-- Month Filter Dropdown -->
+          <v-select
+            v-model="selectedMonth"
+            density="compact"
+            hide-details
+            :items="monthsList"
+            label="Filter by Month"
+            style="max-width: 226px;"
+            variant="outlined"
+          />
+        </v-col>
+      </v-row>
+
+      <!-- History Listing Table -->
+      <div v-if="filteredHistoryWeeks.length > 0">
+        <v-card elevation="0" style="border: 1px solid #BDBDBD;">
+          <!-- Search Toolbar -->
+          <v-card-title class="d-flex align-center pa-4" style="background-color: #FFF3E0;">
+            <v-text-field
+              v-model="search"
+              clearable
               density="compact"
               hide-details
-              :items="monthsList"
-              label="Filter by Month"
-              style="max-width: 226px;"
+              label="Search meals or dates..."
+              prepend-inner-icon="mdi-magnify"
+              single-line
+              style="max-width: 400px;"
               variant="outlined"
             />
-          </v-col>
-        </v-row>
+          </v-card-title>
 
-        <!-- History Listing Table -->
-        <div v-if="filteredHistoryWeeks.length > 0">
-          <v-card elevation="0" style="border: 1px solid #BDBDBD;">
-            <!-- Search Toolbar -->
-            <v-card-title class="d-flex align-center pa-4" style="background-color: #FFF3E0;">
-              <v-text-field
-                v-model="search"
-                clearable
-                density="compact"
-                hide-details
-                label="Search meals or dates..."
-                prepend-inner-icon="mdi-magnify"
-                single-line
-                style="max-width: 400px;"
-                variant="outlined"
-              />
-            </v-card-title>
+          <!-- DataTable -->
+          <v-data-table
+            :headers="headers"
+            :items="filteredHistoryWeeks"
+            :search="search"
+            :loading="isLoading"
+            class="elevation-0"
+            :items-per-page="10"
+          >
+            <!-- Week Title Column -->
+            <template #item.title="{ item }">
+              <span class="font-weight-bold text-grey-darken-4">
+                {{ item.title }}
+              </span>
+            </template>
 
-            <!-- DataTable -->
-            <v-data-table
-              :headers="headers"
-              :items="filteredHistoryWeeks"
-              :search="search"
-              :loading="isLoading"
-              class="elevation-0"
-              :items-per-page="10"
+            <!-- Dynamic columns for Mon-Fri -->
+            <template
+              v-for="index in [0, 1, 2, 3, 4]"
+              :key="index"
+              #[`item.days.${index}`]="{ item }"
             >
-              <!-- Week Title Column -->
-              <template #item.title="{ item }">
-                <span class="font-weight-bold text-grey-darken-4">
-                  {{ item.title }}
-                </span>
-              </template>
-
-              <!-- Dynamic columns for Mon-Fri -->
-              <template
-                v-for="index in [0, 1, 2, 3, 4]"
-                :key="index"
-                #[`item.days.${index}`]="{ item }"
-              >
-                <div class="d-flex flex-column align-center py-2">
-                  <!-- Selection Name -->
-                  <span 
-                    v-if="['off_day', 'holiday'].includes(item.days[index].status)" 
-                    class="text-red-darken-2 font-weight-bold text-caption"
-                  >
-                    Off day
-                  </span>
-                  <span v-else class="text-body-2 font-weight-medium">
-                    {{ item.days[index].selection || '–' }}
-                  </span>
-
-                  <!-- Review Button with Tooltip -->
-                  <v-tooltip 
-                    v-if="item.days[index].selection && item.days[index].order && (item.status === 'submitted' || item.days[index].status === 'submitted')"
-                    :text="item.days[index].order.rating ? `Reviewed: ${item.days[index].order.rating} Stars. Click to edit.` : 'Click to review this meal'" 
-                    location="top"
-                  >
-                    <template #activator="{ props }">
-                      <v-btn
-                        v-bind="props"
-                        icon
-                        variant="text"
-                        density="compact"
-                        class="mt-1"
-                        :color="item.days[index].order.rating ? 'amber-darken-2' : 'grey-darken-1'"
-                        @click="openReview(item.days[index].order)"
-                      >
-                        <v-icon size="small">
-                          {{ item.days[index].order.rating ? 'mdi-star' : 'mdi-comment-plus-outline' }}
-                        </v-icon>
-                      </v-btn>
-                    </template>
-                  </v-tooltip>
-                </div>
-              </template>
-
-              <!-- Status Column -->
-              <template #item.status="{ item }">
-                <v-chip
-                  :color="item.status === 'submitted' ? 'green-darken-1' : 'orange-darken-2'"
-                  size="small"
-                  variant="flat"
-                  class="font-weight-bold text-capitalize"
+              <div class="d-flex flex-column align-center py-2">
+                <!-- Selection Name -->
+                <span 
+                  v-if="['off_day', 'holiday'].includes(item.days[index].status)" 
+                  class="text-red-darken-2 font-weight-bold text-caption"
                 >
-                  {{ item.status === 'submitted' ? 'Submitted' : 'In Progress' }}
-                </v-chip>
-              </template>
+                  Off day
+                </span>
+                <span v-else class="text-body-2 font-weight-medium">
+                  {{ item.days[index].selection || '–' }}
+                </span>
 
-              <!-- Empty State -->
-              <template #no-data>
-                <div class="text-center py-12">
-                  <v-icon color="#1E1E1E" size="64">
-                    mdi-clipboard-text-off-outline
-                  </v-icon>
-                  <div class="font-weight-medium mt-4" style="font-size: 20px;">
-                    No order history matches the criteria
-                  </div>
+                <!-- Review Button with Tooltip -->
+                <v-tooltip 
+                  v-if="item.days[index].selection && item.days[index].order && (item.status === 'submitted' || item.days[index].status === 'submitted')"
+                  :text="item.days[index].order.rating ? `Reviewed: ${item.days[index].order.rating} Stars. Click to edit.` : 'Click to review this meal'" 
+                  location="top"
+                >
+                  <template #activator="{ props }">
+                    <v-btn
+                      v-bind="props"
+                      icon
+                      variant="text"
+                      density="compact"
+                      class="mt-1"
+                      :color="item.days[index].order.rating ? 'amber-darken-2' : 'grey-darken-1'"
+                      @click="openReview(item.days[index].order)"
+                    >
+                      <v-icon size="small">
+                        {{ item.days[index].order.rating ? 'mdi-star' : 'mdi-comment-plus-outline' }}
+                      </v-icon>
+                    </v-btn>
+                  </template>
+                </v-tooltip>
+              </div>
+            </template>
+
+            <!-- Status Column -->
+            <template #item.status="{ item }">
+              <v-chip
+                :color="item.status === 'submitted' ? 'green-darken-1' : 'orange-darken-2'"
+                size="small"
+                variant="flat"
+                class="font-weight-bold text-capitalize"
+              >
+                {{ item.status === 'submitted' ? 'Submitted' : 'In Progress' }}
+              </v-chip>
+            </template>
+
+            <!-- Empty State -->
+            <template #no-data>
+              <div class="text-center py-12">
+                <v-icon color="#1E1E1E" size="64">
+                  mdi-clipboard-text-off-outline
+                </v-icon>
+                <div class="font-weight-medium mt-4" style="font-size: 20px;">
+                  No order history matches the criteria
                 </div>
-              </template>
-            </v-data-table>
-          </v-card>
-
-          <ReviewDialog
-            v-model="showReviewDialog"
-            :order="selectedOrderToReview"
-            :loading="orderStore.isLoading"
-            @submit-review="handleReviewSubmit"
-          />
-        </div>
-
-        <!-- Empty State -->
-        <v-card
-          v-else
-          class="pa-8 rounded-lg text-center"
-          style="border: 1px dashed #D2451E;"
-          variant="flat"
-        >
-          <v-icon class="mb-3" color="#1E1E1E" size="48">
-            mdi-clipboard-text-off-outline
-          </v-icon>
-
-          <div class="font-weight-medium" style="font-size: 20px; color: #1E1E1E;">
-            No past order history found.
-          </div>
+              </div>
+            </template>
+          </v-data-table>
         </v-card>
+
+        <ReviewDialog
+          v-model="showReviewDialog"
+          :order="selectedOrderToReview"
+          :loading="orderStore.isLoading"
+          @submit-review="handleReviewSubmit"
+        />
       </div>
+
+      <!-- Empty State -->
+      <v-card
+        v-else
+        class="pa-8 rounded-lg text-center"
+        style="border: 1px dashed #D2451E;"
+        variant="flat"
+      >
+        <v-icon class="mb-3" color="#1E1E1E" size="48">
+          mdi-clipboard-text-off-outline
+        </v-icon>
+
+        <div class="font-weight-medium" style="font-size: 20px; color: #1E1E1E;">
+          No past order history found.
+        </div>
+      </v-card>
     </div>
-  </AppShell>
+  </div>
 </template>
 
 <style scoped>

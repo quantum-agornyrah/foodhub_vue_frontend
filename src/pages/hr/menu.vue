@@ -1,18 +1,7 @@
 <script setup>
-  // File-based routing meta definition
-  definePage({
-    name: 'MenuManager',
-    path: '/menu-manager',
-    meta: {
-      requiresAuth: true,
-      roles: ['hr'],
-    },
-  })
-
   import { computed, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
 
-  import AppShell from '@/components/layout/AppShell.vue'
   import FoodFormDialog from '@/components/menu/FoodFormDialog.vue'
   import BulkFoodFormDialog from '@/components/menu/BulkFoodFormDialog.vue'
   import OffDayDialog from '@/components/menu/OffDayDialog.vue'
@@ -42,7 +31,7 @@
   const showDeleteDialog = ref(false)
 
   const itemToDelete = ref(null)
-  const editingFood = ref(null)
+  const editingFood = ref({})
 
   // Fetch data on mount
   onMounted(async () => {
@@ -227,184 +216,182 @@
     if (window.history.state && window.history.state.back) {
       router.back()
     } else {
-      router.push('/hr-dashboard')
+      router.push('/hr')
     }
   }
 </script>
 
 <template>
-  <AppShell>
-    <div style="max-width: 1400px; margin: 0 auto; padding: 0 16px;">
-      <!-- Back button -->
-      <v-row class="d-flex align-center justify-space-between">
-        <v-col class="d-flex justify-start align-center" cols="12" sm="6">
-          <v-btn
-            prepend-icon="mdi-arrow-left"
-            variant="flat"
-            color="#D2451E"
-            class="mr-2 mt-4"
-            @click="goBack"
-          > 
-          Go back 
-          </v-btn>
-        </v-col>
-      </v-row>
+  <div style="max-width: 1400px; margin: 0 auto; padding: 0 16px;">
+    <!-- Back button -->
+    <v-row class="d-flex align-center justify-space-between">
+      <v-col class="d-flex justify-start align-center" cols="12" sm="6">
+        <v-btn
+          prepend-icon="mdi-arrow-left"
+          variant="flat"
+          color="#D2451E"
+          class="mr-2 mt-4"
+          @click="goBack"
+        > 
+        Go back 
+        </v-btn>
+      </v-col>
+    </v-row>
 
-      <!-- Page Header -->
-      <v-row class="mb-4 mt-n1 d-flex align-center justify-space-between">
-        <v-col class="d-flex justify-start" cols="12" sm="6">
-          <h1
-            class="font-weight-bold text-display-medium"
-            style="letter-spacing: 0.5px; color: #D2451E !important;"
-          >
-            Menu manager
-          </h1>
-        </v-col>
+    <!-- Page Header -->
+    <v-row class="mb-4 mt-n1 d-flex align-center justify-space-between">
+      <v-col class="d-flex justify-start" cols="12" sm="6">
+        <h1
+          class="font-weight-bold text-display-medium"
+          style="letter-spacing: 0.5px; color: #D2451E !important;"
+        >
+          Menu manager
+        </h1>
+      </v-col>
 
-        <!-- 1. Week Navigation -->
-        <v-col class="d-flex justify-md-end ga-3 flex-wrap" cols="12" sm="5">
-          <WeekPicker v-model="weekOffset"/>
-        </v-col>
-      </v-row>
+      <!-- 1. Week Navigation -->
+      <v-col class="d-flex justify-md-end ga-3 flex-wrap" cols="12" sm="5">
+        <WeekPicker v-model="weekOffset"/>
+      </v-col>
+    </v-row>
 
-      <!-- 2. Day Selection Tabs -->
-      <div class="mb-6">
-        <WeekStrip
-          :off-days="offDaysList"
-          :selected-date="activeDay"
-          :week-offset="weekOffset"
-          @update:selected-date="setActiveDay"
-        />
+    <!-- 2. Day Selection Tabs -->
+    <div class="mb-6">
+      <WeekStrip
+        :off-days="offDaysList"
+        :selected-date="activeDay"
+        :week-offset="weekOffset"
+        @update:selected-date="setActiveDay"
+      />
+    </div>
+
+    <!-- 3. Selected Day Card -->
+    <v-card
+      v-if="selectedDayInfo"
+      class="mb-6 pa-6"
+      elevation="0"
+      style="border: 1px solid #D2451E;"
+    >
+      <div class="d-flex flex-column flex-sm-row justify-space-between align-sm-center ga-4 mb-6">
+        <div>
+          <h2 class="font-weight-bold" style="color: #1E1E1E;">
+            {{ selectedDayInfo.formatted }}
+          </h2>
+          <div class="text-caption" style="color: #1E1E1E; font-size: 16px;">
+            {{ selectedDayInfo.itemCount }} items
+          </div>
+        </div>
+        <v-btn
+          color="#D2451E"
+          variant="flat"
+          prepend-icon="mdi-plus"
+          class="text-capitalize font-weight-bold px-6 w-100 w-sm-auto"
+          @click="handleAddMultipleFoods"
+        >
+          Add food item
+        </v-btn>
       </div>
 
-      <!-- 3. Selected Day Card -->
-      <v-card
-        v-if="selectedDayInfo"
-        class="mb-6 pa-6"
-        elevation="0"
-        style="border: 1px solid #D2451E;"
-      >
-        <div class="d-flex flex-column flex-sm-row justify-space-between align-sm-center ga-4 mb-6">
-          <div>
-            <h2 class="font-weight-bold" style="color: #1E1E1E;">
-              {{ selectedDayInfo.formatted }}
-            </h2>
-            <div class="text-caption" style="color: #1E1E1E; font-size: 16px;">
-              {{ selectedDayInfo.itemCount }} items
-            </div>
-          </div>
-          <v-btn
-            color="#D2451E"
-            variant="flat"
-            prepend-icon="mdi-plus"
-            class="text-capitalize font-weight-bold px-6 w-100 w-sm-auto"
-            @click="handleAddMultipleFoods"
-          >
-            Add food item
-          </v-btn>
-        </div>
+      <!-- Loading State -->
+      <div v-if="isLoading" class="d-flex flex-column ga-2">
+        <SkeletonCard v-for="i in 3" :key="i" />
+      </div>
 
-        <!-- Loading State -->
-        <div v-if="isLoading" class="d-flex flex-column ga-2">
-          <SkeletonCard v-for="i in 3" :key="i" />
-        </div>
+      <!-- Food Items List -->
+      <div v-else-if="activeDayMenu.length > 0" class="d-flex flex-column ga-2">
+        <v-card
+          v-for="item in activeDayMenu"
+          :key="item.id"
+          class="pa-4"
+          color="grey-lighten-5"
+          elevation="0"
+          rounded="lg"
+        >
+          <div class="d-flex flex-column flex-sm-row ga-4 align-start align-sm-center">
+            <div class="d-flex ga-4 align-center flex-grow-1 w-100">
+              <!-- Food Image/Icon -->
+              <v-avatar size="56" rounded="lg" class="flex-shrink-0">
+                <v-img
+                  v-if="item.imageUrl"
+                  :src="item.imageUrl"
+                  :alt="item.title"
+                  cover
+                  loading="lazy"
+                >
+                  <template #error>
+                    <div class="d-flex align-center justify-center fill-height bg-grey-lighten-3">
+                      <v-icon color="#D2451E" size="32">mdi-food</v-icon>
+                    </div>
+                  </template>
+                </v-img>
+                <v-icon v-else color="#D2451E" size="32">mdi-food</v-icon>
+              </v-avatar>
 
-        <!-- Food Items List -->
-        <div v-else-if="activeDayMenu.length > 0" class="d-flex flex-column ga-2">
-          <v-card
-            v-for="item in activeDayMenu"
-            :key="item.id"
-            class="pa-4"
-            color="grey-lighten-5"
-            elevation="0"
-            rounded="lg"
-          >
-            <div class="d-flex flex-column flex-sm-row ga-4 align-start align-sm-center">
-              <div class="d-flex ga-4 align-center flex-grow-1 w-100">
-                <!-- Food Image/Icon -->
-                <v-avatar size="56" rounded="lg" class="flex-shrink-0">
-                  <v-img
-                    v-if="item.imageUrl"
-                    :src="item.imageUrl"
-                    :alt="item.title"
-                    cover
-                    loading="lazy"
-                  >
-                    <template #error>
-                      <div class="d-flex align-center justify-center fill-height bg-grey-lighten-3">
-                        <v-icon color="#D2451E" size="32">mdi-food</v-icon>
-                      </div>
-                    </template>
-                  </v-img>
-                  <v-icon v-else color="#D2451E" size="32">mdi-food</v-icon>
-                </v-avatar>
-
-                <!-- Food Details -->
-                <div class="min-width-0">
-                  <div class="font-weight-bold text-truncate" style="color: #1E1E1E; font-size: 17px;">
-                    {{ item.title }}
-                  </div>
-                  <div class="text-caption" style="color: #666666;">
-                    {{ item.description }}
-                  </div>
+              <!-- Food Details -->
+              <div class="min-width-0">
+                <div class="font-weight-bold text-truncate" style="color: #1E1E1E; font-size: 17px;">
+                  {{ item.title }}
+                </div>
+                <div class="text-caption" style="color: #666666;">
+                  {{ item.description }}
                 </div>
               </div>
-
-              <!-- Action Buttons -->
-              <div class="d-flex ga-2 w-100 w-sm-auto justify-end">
-                <v-btn
-                  icon="mdi-pencil-outline"
-                  variant="outlined"
-                  size="small"
-                  style="border-color: #D2451E;"
-                  @click="handleEditFood(item)"
-                />
-                <v-btn
-                  icon="mdi-delete-outline"
-                  variant="outlined"
-                  size="small"
-                  color="#D2451E"
-                  @click="handleDeleteFood(item)"
-                />
-              </div>
             </div>
-          </v-card>
-        </div>
 
-        <!-- Empty State -->
-        <div v-else class="text-center py-8">
-          <v-icon color="#1E1E1E" size="48">
-            mdi-food-off-outline
-          </v-icon>
-
-          <div class="font-weight-bold" style="font-size: 20px; color: #1E1E1E;">
-            No items for this day
+            <!-- Action Buttons -->
+            <div class="d-flex ga-2 w-100 w-sm-auto justify-end">
+              <v-btn
+                icon="mdi-pencil-outline"
+                variant="outlined"
+                size="small"
+                style="border-color: #D2451E;"
+                @click="handleEditFood(item)"
+              />
+              <v-btn
+                icon="mdi-delete-outline"
+                variant="outlined"
+                size="small"
+                color="#D2451E"
+                @click="handleDeleteFood(item)"
+              />
+            </div>
           </div>
-        </div>
-      </v-card>
+        </v-card>
+      </div>
 
-      <!-- Mark as Off Day Section -->
-      <v-card
-        class="pa-6 mb-14"
-        elevation="0"
-        style="border: 1px solid #D2451E !important;"
-      >
-        <div class="d-flex flex-column flex-sm-row justify-space-between align-sm-center ga-4">
-          <div class="font-weight-bold" style="color: #1E1E1E;">
-            Mark this day as off / holiday
-          </div>
-          <v-btn
-            color="#D2451E"
-            variant="outlined"
-            prepend-icon="mdi-calendar-remove"
-            class="text-capitalize font-weight-bold px-8 w-100 w-sm-auto"
-            @click="handleMarkOffDay"
-          >
-            Set off day
-          </v-btn>
+      <!-- Empty State -->
+      <div v-else class="text-center py-8">
+        <v-icon color="#1E1E1E" size="48">
+          mdi-food-off-outline
+        </v-icon>
+
+        <div class="font-weight-bold" style="font-size: 20px; color: #1E1E1E;">
+          No items for this day
         </div>
-      </v-card>
-    </div>
+      </div>
+    </v-card>
+
+    <!-- Mark as Off Day Section -->
+    <v-card
+      class="pa-6 mb-14"
+      elevation="0"
+      style="border: 1px solid #D2451E !important;"
+    >
+      <div class="d-flex flex-column flex-sm-row justify-space-between align-sm-center ga-4">
+        <div class="font-weight-bold" style="color: #1E1E1E;">
+          Mark this day as off / holiday
+        </div>
+        <v-btn
+          color="#D2451E"
+          variant="outlined"
+          prepend-icon="mdi-calendar-remove"
+          class="text-capitalize font-weight-bold px-8 w-100 w-sm-auto"
+          @click="handleMarkOffDay"
+        >
+          Set off day
+        </v-btn>
+      </div>
+    </v-card>
 
     <!-- 4. Dialogs -->
     <FoodFormDialog
@@ -437,5 +424,5 @@
       @cancel="cancelDelete"
       @confirm="confirmDelete"
     />
-  </AppShell>
+  </div>
 </template>

@@ -10,17 +10,17 @@ export function requireAuth (to, from, next) {
 
   // If the route requires auth and the user is NOT authenticated
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return next({ name: 'LoginPage' })
+    return next('/login')
   }
 
   // Guest or Public pages
-  const guestOnlyRoutes = ['LoginPage', 'Register', 'ForgotPassword']
+  const guestOnlyRoutes = ['/login', '/register', '/forgot-password']
 
   // If user is logged in and trying to access guest or public pages
-  if (authStore.isAuthenticated && guestOnlyRoutes.includes(to.name)) {
+  if (authStore.isAuthenticated && (guestOnlyRoutes.includes(to.name) || guestOnlyRoutes.includes(to.path))) {
 
     // Direct to dashboard of each role first right after successful login
-    return next(authStore.isHR ? { name: 'HrDashboard' } : { name: 'StaffDashboard' })
+    return next(authStore.isHR ? '/hr' : '/staff')
   }
 
   // Only enforce role checks if the user is logged in
@@ -31,7 +31,7 @@ export function requireAuth (to, from, next) {
 
     // Checks if the user's role IS NOT in the list of allowed roles.
     if (allowedRoles && !allowedRoles.includes(authStore.userInfo?.role)) {
-      return next(authStore.isHR ? { name: 'HrDashboard' } : { name: 'StaffDashboard' })
+      return next(authStore.isHR ? '/hr' : '/staff')
     }
   }
 
