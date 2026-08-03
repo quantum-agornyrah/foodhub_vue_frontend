@@ -12,7 +12,8 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "mcp": "ruler apply",
-    "mcp:revert": "ruler revert"
+    "mcp:revert": "ruler revert",
+    "cy:open": "cypress open"
   },
   "dependencies": {
     "@fontsource/roboto": "^5.2.10",
@@ -33,6 +34,7 @@
     "@types/node": "^24.12.0",
     "@vitejs/plugin-vue": "^6.0.5",
     "@vue/tsconfig": "^0.9.0",
+    "cypress": "^15.19.0",
     "eslint": "^9.39.4",
     "eslint-config-vuetify": "^4.3.4",
     "npm-run-all2": "^8.0.4",
@@ -47,5 +49,8 @@
     "unplugin-fonts": {
       "vite": "^8.0.0"
     }
+  },
+  "allowScripts": {
+    "cypress": true
   }
 }
