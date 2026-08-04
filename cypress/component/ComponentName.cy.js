@@ -28,11 +28,18 @@ describe('<Stepper />', () => {
     cy.get('[data-cy=increment]').click()
     cy.get('[data-cy=counter]').should('have.text', '1')
   })
-
   it ('when the decrement button is clicked, the counter is decreased', () => {
     cy.mount(Stepper)
     cy.get('[data-cy=decrement]').click()
     cy.get('[data-cy=counter]').should('have.text', '-1')
+  })
+
+  // Testing Components with Events - Using Spies
+  it ('clicking + fires a change event with the increment value', () => {
+    const onChangeSpy = cy.spy().as('onChangeSpy')
+    cy.mount(Stepper, { props: { onChange: onChangeSpy } })
+    cy.get('[data-cy=increment]').click()
+    cy.get('[@onChangeSpy]').should('have.been.calledWith', 1)
   })
 
 })
