@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-const { onBeforeMount } = require("vue")
+import { onBeforeMount } from "vue"
 
 // ***********************************************
 // This example commands.ts shows you how to
