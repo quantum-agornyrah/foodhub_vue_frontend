@@ -36,9 +36,12 @@ describe('<Stepper />', () => {
 
   // Testing Components with Events - Using Spies
   it ('clicking + fires a change event with the increment value', () => {
+    // Creat a spy alias
     const onChangeSpy = cy.spy().as('onChangeSpy')
     cy.mount(Stepper, { props: { onChange: onChangeSpy } })
     cy.get('[data-cy=increment]').click()
+
+    // Get the spy using the prepended symbol
     cy.get('[@onChangeSpy]').should('have.been.calledWith', 1)
   })
 
