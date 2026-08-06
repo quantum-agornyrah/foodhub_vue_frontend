@@ -1,6 +1,6 @@
-import ErrorBoundary from './ErrorBoundary.vue'
+import ErrorBoundary from './testVueFiles/ErrorBoundary.vue'
 import { h } from 'vue'
-import ChildWithError from './ChildWithError.vue'
+import ChildWithError from './testVueFiles/ChildWithError.vue'
 
 describe('Testing with onErrorCaptured', () => {
   it('displays the fallback UI on error', () => {
