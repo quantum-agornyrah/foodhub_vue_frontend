@@ -2,6 +2,7 @@ import { defineConfig } from "cypress";
 
 export default defineConfig({
   allowCypressEnv: false,
+  watchForFileChanges: false,
 
   e2e: {
     baseUrl: "http://localhost:3000",

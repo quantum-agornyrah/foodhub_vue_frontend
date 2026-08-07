@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 import { onBeforeMount } from "vue"
+import { mount } from 'cypress/vue'
 
 // ***********************************************
 // This example commands.ts shows you how to
