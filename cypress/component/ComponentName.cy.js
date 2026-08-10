@@ -44,4 +44,20 @@ describe('<Stepper />', () => {
     cy.get('[@onChangeSpy]').should('have.been.calledWith', 1)
   })
 
+  // Overriding the configured value
+  it ('Over ride with alignments', () => {
+    cy.get('button').click({ scrollBehavior: { inline: 'start'} })
+  })
+
+  // break on a debugger before the action command
+  it ('Debugger', () => {
+    cy.get('button').debug().click()
+  })
+
+  // force the click and all subsequent events
+  // to fire even if this element isn't considered 'actionable'
+  it ('Force click', () => {
+    cy.get('button').click({ force: true })
+  })
+
 })
