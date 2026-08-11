@@ -60,4 +60,42 @@ describe('<Stepper />', () => {
     cy.get('button').click({ force: true })
   })
 
+  it ('Cypress closures', () => {
+    cy.get('button').then(($btn) => {
+
+      // store the button's text
+      const txt = $btn.text()
+
+      // submit a form
+      cy.get('form').submit()
+
+      // compare the two buttons' text
+      // and make sure they are different
+      cy.get('button').should(($btn2) => {
+        expect($btn2.text()).not.to.eq(txt)
+      })
+    })
+  })
+
+  it('Cypress Debuggers', () => {
+    cy.get('button').then(($btn) => {
+      // inspect $btn <object>
+      debugger
+
+      cy.get('[data-testid="countries"]')
+        .select('USA')
+        .then(($select) => {
+          // inspect $select <object>
+          debugger
+
+          cy.clock().then(($clock) => {
+            // inspect $clock <object>
+            debugger
+
+            $btn // is still available
+            $select // is still available too
+          })
+        })
+    })
+  })
 })

@@ -25,3 +25,12 @@ import './commands'
 beforeEach(() => {
     cy.log('I run before every test in every spec file')
 })
+
+
+// SETUP FOR MOUNTS
+import { mount } from 'cypress/vue'
+
+// Add the custom mount command
+Cypress.Commands.add('mount', (component) => {
+  return mount(component)
+})
