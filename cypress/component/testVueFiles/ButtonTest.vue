@@ -1,5 +1,7 @@
 <template>
-    <button @click="increment">increment {{ count }}</button>
+    <button @click="increment">
+        increment {{ count }}
+    </button>
     
     you clicked button 
         <span data-testid="num">

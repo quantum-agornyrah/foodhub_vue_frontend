@@ -1,11 +1,18 @@
 import { defineConfig } from "cypress";
 
 export default defineConfig({
+  projectId: 'jk6vdt',
   // Cypress scrollBehavior accepts: 'center', 'top', 'bottom', 'nearest', false
   scrollBehavior: 'center',
 
   allowCypressEnv: false,
   watchForFileChanges: false,
+
+  // Cypress Security Config
+  env: {
+    apiKey: process.env.API_KEY,
+    dbPassword: process.env.DB_PASSWORD
+  },
 
   e2e: {
     baseUrl: "http://localhost:3000",
