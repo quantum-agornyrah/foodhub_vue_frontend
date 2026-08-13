@@ -206,7 +206,7 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
-    'src/pages/register.vue': {
+    'src/pages/Register.vue': {
       routes:
         | 'Register'
       views:
