@@ -1,5 +1,5 @@
 // ***********************************************************
-// This example support/component.ts is processed and
+// This example support/component.js is processed and
 // loaded automatically before your test files.
 //
 // This is a great place to put global configuration and
@@ -16,21 +16,51 @@
 // Import commands.js using ES2015 syntax:
 import './commands'
 
-// Augment the Cypress namespace to include type definitions for
-// your custom command.
-// Alternatively, can be defined in cypress/support/component.d.ts
-// with a <reference path="./component" /> at the top of your spec.
-
-// A global support hook
-beforeEach(() => {
-    cy.log('I run before every test in every spec file')
-})
-
-
-// SETUP FOR MOUNTS
 import { mount } from 'cypress/vue'
+import { createPinia } from 'pinia'
+import { createVuetify } from 'vuetify'
+import { createMemoryHistory, createRouter } from 'vue-router'
+import { h } from 'vue'
+import { VApp } from 'vuetify/components'
 
-// Add the custom mount command
-Cypress.Commands.add('mount', (component) => {
-  return mount(component)
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
+
+import 'vuetify/styles'
+
+Cypress.Commands.add('mount', (component, options = {}) => {
+    options.global = options.global || {}
+    options.global.plugins = options.global.plugins || []
+
+    const vuetify = createVuetify({ components, directives})
+    const pinia = createPinia()
+
+    // Dummy router for component isolation
+    const router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+        { path: '/login', component: { template: 'div' } },
+        { path: '/hr', component: { template: 'div' } },
+        { path: '/staff', component: { template: 'div' } },
+        { path: '/forgot-password', component: { template: 'div' } },
+        { path: '/register', component: { template: 'div' } },
+        ],
+    })
+
+    options.global.plugins.push(vuetify)
+    options.global.plugins.push(pinia)
+    options.global.plugins.push(router)
+
+    const wrapperComponent = {
+        render () {
+            return h(VApp, null, {
+                default: () => h(component, options.props || {}),
+            })
+        },
+    }
+
+    return mount(wrapperComponent, options)
 })
+
+// Example use:
+// cy.mount(MyComponent)

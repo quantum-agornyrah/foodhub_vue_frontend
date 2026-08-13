@@ -1,8 +1,4 @@
 /// <reference types="cypress" />
-
-import { onBeforeMount } from "vue"
-import { mount } from 'cypress/vue'
-
 // ***********************************************
 // This example commands.ts shows you how to
 // create various custom commands and overwrite
@@ -12,21 +8,12 @@ import { mount } from 'cypress/vue'
 // commands please read more here:
 // https://on.cypress.io/custom-commands
 // ***********************************************
-
+//
+//
 // -- This is a parent command --
-Cypress.Commands.add('Hrlogin', () => { 
-    // Set test data unto the sessionStorage to test UI
-    cy.window().then((win) => {
-        win.sessionStorage.setItem('token', 'cypress-jwt-token-111')
-        win.sessionStorage.setItem('userInfo', JSON.stringify({
-            id: 101,
-            name: 'Cypress Hr',
-            email: 'hr@foodhub.com',
-            role: 'hr'
-        }))
-    })
-})
-
+// Cypress.Commands.add('login', (email, password) => { ... })
+//
+//
 // -- This is a child command --
 // Cypress.Commands.add('drag', { prevSubject: 'element'}, (subject, options) => { ... })
 //

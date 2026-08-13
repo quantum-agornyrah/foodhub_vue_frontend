@@ -46,7 +46,7 @@ api.interceptors.response.use(
       window.sessionStorage.removeItem('token')
       window.sessionStorage.removeItem('userInfo')
       // Only redirect if we are not already on the login page
-      if (window.location.pathname !== '/login') {
+      if (window.location.pathname !== '/login' && !window.Cypress) {
         window.location.href = '/login'
       }
     }
