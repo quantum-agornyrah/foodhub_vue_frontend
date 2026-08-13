@@ -50,5 +50,8 @@
     "unplugin-fonts": {
       "vite": "^8.0.0"
     }
+  },
+  "allowScripts": {
+    "cypress": true
   }
 }
