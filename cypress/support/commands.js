@@ -11,7 +11,50 @@
 //
 //
 // -- This is a parent command --
-// Cypress.Commands.add('login', (email, password) => { ... })
+
+// CUSTOM CYPRESS LOGIN COMMAND FOR LOGIN CACHING
+Cypress.Commands.add('HrLogin', (email = 'ericagornyrah@gmail.com', password = 'user123') => { 
+    cy.session([email, password], () => {
+        cy.request({
+            method: 'POST',
+            url: 'http://localhost:8000/staff/login',
+            body: { email, password },
+        }).then((response) => {
+            expect(response.status).to.eq(200)
+
+            const token = response.body['Staff Token'] || response.body.token
+            const userInfo = response.body.userInfo
+
+            window.sessionStorage.setItem('token', token)
+            if(userInfo){
+                window.sessionStorage.setItem('userInfo', JSON.stringify(userInfo))
+            }
+        })
+    })
+})
+
+Cypress.Commands.add('StaffLogin', (email = 'cypresstester@gmail.com', password = 'cypress123') => { 
+    cy.session([email, password], () => {
+        // 1. Make a request to the existing backend
+        cy.request({
+            method: 'POST',
+            url: 'http://localhost:8000/staff/login',
+            body: { email, password },
+        }).then((response) => {
+            expect(response.status).to.eq(200)
+
+            const token = response.body['Staff Token'] || response.body.token
+            const userInfo = response.body.userInfo
+
+            // 2. Save token and user data on session storage
+            window.sessionStorage.setItem('token', token)
+            if(userInfo){
+                window.sessionStorage.setItem('userInfo', JSON.stringify(userInfo))
+            }
+        })
+    })
+})
+
 //
 //
 // -- This is a child command --
