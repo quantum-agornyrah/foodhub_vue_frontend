@@ -21,7 +21,6 @@ import { createPinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { h } from 'vue'
-import { VApp } from 'vuetify/components'
 
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
@@ -53,7 +52,7 @@ Cypress.Commands.add('mount', (component, options = {}) => {
 
     const wrapperComponent = {
         render () {
-            return h(VApp, null, {
+            return h(components.VApp, null, {
                 default: () => h(component, options.props || {}),
             })
         },
