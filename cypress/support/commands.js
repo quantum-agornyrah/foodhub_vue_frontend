@@ -12,7 +12,7 @@
 //
 // -- This is a parent command --
 
-// CUSTOM CYPRESS LOGIN COMMAND FOR LOGIN CACHING
+// CUSTOM CYPRESS LOGIN COMMANDS FOR LOGIN CACHING
 Cypress.Commands.add('HrLogin', (email = 'ericagornyrah@gmail.com', password = 'user123') => { 
     cy.session([email, password], () => {
         cy.request({

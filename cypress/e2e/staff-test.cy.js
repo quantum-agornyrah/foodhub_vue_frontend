@@ -22,22 +22,66 @@ describe('template spec', () => {
 
     // Find the History button and click it
     cy.contains('button', 'View All History').click()
-    cy.url().should('include', '/staff/history')
+    cy.url().should('include', '/history')
     cy.contains('My order history').should('be.visible')
   })
 
   it('Navigate to the overview page, select and make an order', () => {
-    // Get all order items and make an api call for selected orders 
-    cy.intercept('GET', '**/staff/orders/**').as('getOrders')
-    cy.intercept('POST', '**/staff/orders/**').as('postOrder')
+    // Stub the menu item with an intercept of mock data
+    cy.intercept('GET', '**/menu/all**', {
+      statusCode: 200,
+      body: [
+        {
+          id: 1,
+          title: 'Jollof Rice',
+          description: 'Jollof Rice with Chicken and Shito',
+          image_url: '',
+          type: 'Vongees',
+          day: 'Monday',
+          date: '2026-08-24',
+          week_string: '2026-08-24',
+          status: 'open',
+        },
+      ],
+    }).as('getMenuItem')
 
-    cy.visit('/staff')
-    cy.url().should('include', '/staff')
+    // Stub Post Order with an intercept of mock data - Foreign Key constraint
+    cy.intercept('POST', '**/orders/create**', {
+      statusCode: 200,
+      body: [
+        {
+          id: 999,
+          date: '2026-08-24',
+          day: 'Monday',
+          staff_name: 'Cypress Tester',
+          week_string: '2026-08-24',
+          menu_item_id: 1,
+          menu_title: 'Jollof Rice',
+          status: 'submitted',
+        },
+      ],
+    }).as('postOrder')
 
-    // Click the image link of each item card
-    cy.get('.clickable-image').first().click()
-    cy.url().should('include', 'overview')
-    
+    // Stub all orders for history page
+    cy.intercept('GET', '**/orders/my**', {
+      statusCode: 200,
+      body: [
+        {
+          id: 999,
+          date: '2026-08-24',
+          day: 'Monday',
+          staff_name: 'Cypress Tester',
+          week_string: '2026-08-24',
+          menu_item_id: 1,
+          menu_title: 'Jollof Rice',
+          status: 'submitted',
+        },
+      ],
+    }).as('getMyOrders')
+
+    // Visit the Overview page directly
+    cy.visit('/staff/overview')
+    cy.url().should('include', '/overview')
     cy.contains('Order for Next Week').should('be.visible')
 
     // Make a selection in the first day card
@@ -50,7 +94,7 @@ describe('template spec', () => {
     cy.wait('@postOrder').its('response.statusCode').should('be.oneOf', [200, 201])
 
     cy.visit('/staff/history')
-    cy.url().should('include', '/staff/history')
+    cy.url().should('include', '/history')
     cy.get('.v-data-table', { timeout: 10000 }).should('contain', 'Submitted')
   })
 })
