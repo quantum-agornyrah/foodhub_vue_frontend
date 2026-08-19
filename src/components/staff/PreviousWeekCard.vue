@@ -3,19 +3,19 @@
 
 // 1. Props Definition
   const props = defineProps({
-    // Food title prop
+    // Week title prop
     title: {
       type: String,
       required: true,
     },
 
-    // Food description prop
+    // Week Subtitle prop
     subtitle: {
       type: String,
       default: '',
     },
 
-    // Food status prop { open, off_day, holiday, deadline_passed }
+    // Order status prop { open, off_day, holiday, deadline_passed }
     status: {
       type: String,
       default: 'submitted',
