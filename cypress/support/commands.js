@@ -21,14 +21,24 @@ Cypress.Commands.add('HrLogin', (email = 'ericagornyrah@gmail.com', password = '
             body: { email, password },
         }).then((response) => {
             expect(response.status).to.eq(200)
-
             const token = response.body['Staff Token'] || response.body.token
-            const userInfo = response.body.userInfo
-
             window.sessionStorage.setItem('token', token)
-            if(userInfo){
+
+            cy.request({
+                method: 'GET',
+                url: 'http://localhost:8000/staff/auth',
+                headers: { Authorization: `Bearer ${token}` }
+            }).then((authResponse) => {
+                const profile = authResponse.body
+                const userInfo = {
+                    id: profile.staff_id || profile_id,
+                    name: profile.name,
+                    email: profile.email,
+                    role: profile.role,
+                    department: profile.department
+                }
                 window.sessionStorage.setItem('userInfo', JSON.stringify(userInfo))
-            }
+            })
         })
     })
 })
